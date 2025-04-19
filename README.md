@@ -1,18 +1,23 @@
 
-# Branch Backend
+# MesaClick - Frontend (Branch `feature/frontend`) 🎨
 
-# MesaClick - Backend (Branch `feature/backend`) 🚀
+> **Branch dedicada à interface do usuário**  
+> **Stack principal**: React + TypeScript  
 
-> **Branch dedicada ao desenvolvimento da API**  
-> **Baseada em**: FastAPI (Python) + PostgreSQL  
+<div align="center">
+  <img src="https://img.shields.io/badge/React-20232A?logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript" alt="TypeScript">
+  
+</div>
 
-## 🛠️ Stack Tecnológica  
+## 🛠️ Stack Tecnológica
 | Tecnologia          | Descrição                                                                 |
 |---------------------|---------------------------------------------------------------------------|
-| **FastAPI**         | Framework Python para APIs rápidas com Swagger automático                 |
-| **PostgreSQL**      | Banco de dados relacional para usuários, pedidos e receitas              |
-| **JWT**             | Autenticação via tokens (OAuth2)                                         |
-| **SQLAlchemy**      | ORM para gerenciamento do banco de dados                                 |
-| **Docker**          | Containerização do ambiente                                              |
+| **React 18**        | Biblioteca principal com hooks                                           |
+| **TypeScript**      | Tipagem estática para maior segurança                                    |
+| **React Leaflet**   | Integração com mapas (OpenStreetMap)                                     |
+| **Axios**           | Conexão com a API backend                                                |
 
-## 📂 Estrutura do Projeto  
+
+## 📂 Estrutura do Projeto
+
