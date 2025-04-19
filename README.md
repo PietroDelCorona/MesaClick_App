@@ -10,3 +10,4 @@
 - `dev`: Integração contínua
 - `feature/backend`: Desenvolvimento da API
 - `feature/frontend`: Interface do usuário
+# Branch Dev
