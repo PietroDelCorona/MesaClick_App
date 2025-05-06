@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 
 class RecipeIngredient(BaseModel):
@@ -25,6 +25,7 @@ class RecipeBase(BaseModel):
     cook_time_minutes: Optional[int] = None
     servings: Optional[int] = None
     user_id: int
+    image_url: Optional[HttpUrl] = None
 
 
 class RecipeCreate(RecipeBase):
@@ -37,6 +38,7 @@ class RecipeUpdate(BaseModel):
     prep_time_minutes: Optional[int] = None
     cook_time_minutes: Optional[int] = None
     servings: Optional[int] = None
+    image_url: Optional[HttpUrl] = None
 
 
 class RecipePublic(RecipeBase):
@@ -52,3 +54,14 @@ class RecipePublic(RecipeBase):
 
 class RecipeList(BaseModel):
     recipes: List[RecipePublic]
+
+
+class RecipeCard(BaseModel):
+    id: int
+    title: str
+    image_url: Optional[HttpUrl] = None
+    prep_time_minutes: Optional[int] = None
+    cook_time_minutes: Optional[int] = None
+
+    class Config:
+        from_attributes = True

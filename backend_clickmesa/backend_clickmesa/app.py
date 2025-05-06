@@ -1,12 +1,15 @@
 
 from datetime import datetime
 from http import HTTPStatus
+from typing import List
 
 from fastapi import FastAPI, HTTPException
+from pydantic import HttpUrl
+
 from backend_clickmesa.schemas.recipes import (
+    RecipeCard,
     RecipeCreate,
     RecipeIngredient,
-    RecipeList,
     RecipePublic,
     RecipeStep,
     RecipeUpdate,
@@ -28,7 +31,7 @@ from backend_clickmesa.schemas.user import (
     UserDB,
     UserList,
     UserPublic,
-    UserSchema
+    UserSchema,
 )
 
 app = FastAPI()
@@ -52,15 +55,14 @@ def read_users():
     return {'users': database}
 
 
-@app.get('/users/{user.id}', response_model=UserPublic)
-def read_user_by_id(user_id: int, user: UserSchema):
+@app.get('/users/{user_id}', response_model=UserPublic)
+def read_user_by_id(user_id: int):
     if user_id > len(database) or user_id < 1:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
 
-    user_with_id = UserDB(**user.model_dump(), id=user_id)
-    return user_with_id
+    return database[user_id - 1]
 
 
 @app.post('/users', status_code=HTTPStatus.CREATED, response_model=UserPublic)
@@ -102,7 +104,7 @@ def read_shopping_lists():
     return {'shopping_lists': shopping_lists_db}
 
 
-@app.get('/shopping-lists/{list.id}', response_model=ShoppingListPublic)
+@app.get('/shopping-lists/{list_id}', response_model=ShoppingListPublic)
 def read_shopping_list(list_id: int):
     if list_id > len(shopping_lists_db) or list_id < 1:
         raise HTTPException(
@@ -111,7 +113,11 @@ def read_shopping_list(list_id: int):
     return shopping_lists_db[list_id - 1]
 
 
-@app.post("/shopping-lists/", status_code=HTTPStatus.CREATED, response_model=ShoppingListPublic)
+@app.post(
+    "/shopping-lists/",
+    status_code=HTTPStatus.CREATED,
+    response_model=ShoppingListPublic
+)
 def create_shopping_list(shopping_list: ShoppingListCreate):
     """Cria uma nova lista de compras."""
     db_shopping_list = {
@@ -147,20 +153,33 @@ def delete_shopping_list(list_id: int):
     return {"message": f"List '{deleted['name']}' deleted."}
 
 
-@app.post('/shopping-lists/{list_id}/ingredients', response_model=ShoppingListPublic)
+@app.post(
+    '/shopping-lists/{list_id}/ingredients',
+    response_model=ShoppingListPublic
+)
 def add_ingredient(list_id: int, ingredient: IngredientItem):
     if list_id > len(shopping_lists_db) or list_id < 1:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='List not found'
         )
 
-    shopping_lists_db[list_id - 1]['ingredients'].append(ingredient.model_dump())
+    shopping_lists_db[list_id - 1]
+    ['ingredients'].append(ingredient.model_dump())
     return shopping_lists_db[list_id - 1]
 
 
-@app.get('/recipes/', response_model=RecipeList)
+@app.get('/recipes/', response_model=List[RecipeCard])
 def read_recipes():
-    return {'recipes': recipes_db}
+    return [
+        {
+            "id": recipe["id"],
+            "title": recipe["title"],
+            "image_url": recipe.get("image_url"),
+            "prep_time_minutes": recipe.get("prep_time_minutes"),
+            "cook_time_minutes": recipe.get("cook_time_minutes")
+        }
+        for recipe in recipes_db
+    ]
 
 
 @app.get('/recipes/{recipe_id}', response_model=RecipePublic)
@@ -172,7 +191,11 @@ def read_recipe(recipe_id: int):
     return recipes_db[recipe_id - 1]
 
 
-@app.post('/recipes/', status_code=HTTPStatus.CREATED, response_model=RecipePublic)
+@app.post(
+    '/recipes/',
+    status_code=HTTPStatus.CREATED,
+    response_model=RecipePublic
+)
 def create_recipe(recipe: RecipeCreate):
     db_recipe = {
         **recipe.model_dump(),
@@ -225,7 +248,7 @@ def add_recipe_ingredient(recipe_id: int, ingredient: RecipeIngredient):
 
 @app.post('/recipes/{recipe_id}/steps', response_model=RecipePublic)
 def add_recipe_steps(recipe_id: int, step: RecipeStep):
-    if recipe_id > len(recipes_db) or recipes_db < 1:
+    if recipe_id > len(recipes_db) or recipe_id < 1:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
         )
@@ -234,13 +257,32 @@ def add_recipe_steps(recipe_id: int, step: RecipeStep):
     return recipes_db[recipe_id - 1]
 
 
+@app.patch('/recipes/{recipe_id}/image-url', response_model=RecipePublic)
+def update_recipe_image_url(
+    recipe_id: int,
+    image_url: HttpUrl
+):
+    if recipe_id > len(recipes_db) or recipe_id < 1:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
+        )
+
+    recipes_db[recipe_id - 1]["image-url"] = image_url
+    recipes_db[recipe_id - 1]["updated_at"] = datetime.now()
+    return recipes_db[recipe_id - 1]
+
+
 @app.get('/supermarkets/', response_model=SupermarketList)
 def list_supermarkets():
     return {"supermarkets": supermarkets_db}
 
 
-@app.post('/supermarkets/', status_code=HTTPStatus.CREATED, response_model=SupermarketPublic)
-def create_supermarket(supermarket=SupermarketLocation):
+@app.post(
+    '/supermarkets/',
+    status_code=HTTPStatus.CREATED,
+    response_model=SupermarketPublic
+)
+def create_supermarket(supermarket: SupermarketLocation):
     db_supermarket = {
         **supermarket.model_dump(),
         "id": len(supermarkets_db) + 1
