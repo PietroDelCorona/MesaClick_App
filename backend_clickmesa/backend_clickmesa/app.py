@@ -74,7 +74,7 @@ def create_user(user: UserSchema):
     return user_with_id
 
 
-@app.put('/users/{user.id}', response_model=UserPublic)
+@app.put('/users/{user_id}', response_model=UserPublic)
 def update_user(user_id: int, user: UserSchema):
     if user_id > len(database) or user_id < 1:
         raise HTTPException(
@@ -87,7 +87,7 @@ def update_user(user_id: int, user: UserSchema):
     return user_with_id
 
 
-@app.delete('/users/{user.id}', response_model=Message)
+@app.delete('/users/{user_id}', response_model=Message)
 def delete_user(user_id: int):
     if user_id > len(database) or user_id < 1:
         raise HTTPException(
@@ -237,7 +237,7 @@ def delete_recipe(recipe_id: int):
 
 @app.post('/recipes/{recipe_id}/ingredients', response_model=RecipePublic)
 def add_recipe_ingredient(recipe_id: int, ingredient: RecipeIngredient):
-    if recipe_id > len(recipes_db) or recipes_db < 1:
+    if recipe_id > len(recipes_db) or recipe_id < 1:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
         )
@@ -267,7 +267,7 @@ def update_recipe_image_url(
             status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
         )
 
-    recipes_db[recipe_id - 1]["image-url"] = image_url
+    recipes_db[recipe_id - 1]["image_url"] = image_url
     recipes_db[recipe_id - 1]["updated_at"] = datetime.now()
     return recipes_db[recipe_id - 1]
 
