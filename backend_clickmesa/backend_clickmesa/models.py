@@ -1,0 +1,95 @@
+
+from datetime import datetime, timezone
+from typing import List, Optional
+from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, registry, relationship, mapped_column
+
+table_registry = registry()
+
+@table_registry.mapped_as_dataclass
+class User:
+    __tablename__ = 'users'
+
+    id:Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    username: Mapped[str] = mapped_column(String(50), unique=True)
+    password: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+
+    recipes: Mapped[List["Recipe"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    shopping_lists: Mapped[List["ShoppingList"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+
+
+@table_registry.mapped_as_dataclass
+class Recipe:
+    __tablename__ = 'recipes'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    title: Mapped[str] = mapped_column(String(100))
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    prep_time_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    cook_time_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    servings: Mapped[Optional[int]] = mapped_column(nullable=True)
+    image_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=datetime.now(timezone.utc), init=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    
+    owner: Mapped["User"] = relationship(back_populates="recipes")
+    ingredients: Mapped[List["RecipeIngredient"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+    steps: Mapped[List["RecipeStep"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+
+
+@table_registry.mapped_as_dataclass
+class RecipeIngredient:
+    __tablename__ = 'recipe_ingredients'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    name: Mapped[str] = mapped_column(String(100))
+    quantity: Mapped[float]
+    unit: Mapped[str] = mapped_column(String(20))
+    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    
+    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+
+
+@table_registry.mapped_as_dataclass
+class RecipeStep:
+    __tablename__ = 'recipe_steps'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    step_number: Mapped[int]
+    instruction: Mapped[str] = mapped_column(Text)
+    duration_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    
+    recipe: Mapped["Recipe"] = relationship(back_populates="steps")
+
+@table_registry.mapped_as_dataclass
+class ShoppingList:
+    __tablename__ = 'shopping_lists'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    name: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    owner: Mapped["User"] = relationship(back_populates="shopping_lists")
+    items: Mapped[List["ShoppingListItem"]] = relationship(back_populates="shopping_list", cascade="all, delete-orphan")
+
+
+@table_registry.mapped_as_dataclass
+class ShoppingListItem:
+    __tablename__ = "shopping_list_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    name: Mapped[str] = mapped_column(String(100))
+    quantity: Mapped[float]
+    unit: Mapped[str] = mapped_column(String(20))
+    shopping_list_id: Mapped[int] = mapped_column(ForeignKey("shopping_lists.id"))
+
+    shopping_list: Mapped["ShoppingList"] = relationship(back_populates="items")
+
+    purchased: Mapped[bool] = mapped_column(default=False)
+
