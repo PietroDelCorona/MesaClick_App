@@ -11,7 +11,8 @@ from backend_clickmesa.schemas.supermarkets import (
 supermarkets_db = []
 
 router = APIRouter(
-    prefix="/supermarkets"
+    prefix="/supermarkets",
+    tags=["supermarkets"]
 )
 
 @router.get('/supermarkets/', response_model=SupermarketList)

@@ -1,9 +1,5 @@
 
-from datetime import datetime
-from http import HTTPStatus
-from typing import List
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 
 
 from backend_clickmesa.routes import (
@@ -20,7 +16,9 @@ app.include_router(shopping_lists.router)
 app.include_router(supermarkets.router)
 
 
-
+@app.get('/')
+def hello_world():
+    return {'message': 'Hello to Click Mesa App API.'}
 
 
 
