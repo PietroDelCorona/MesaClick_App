@@ -23,7 +23,6 @@ from backend_clickmesa.schemas.recipes import (
     RecipeUpdate,
 )
 
-recipes_db = []
 
 router = APIRouter(
     prefix="/recipes",
@@ -125,17 +124,6 @@ def delete_recipe(
 
     return {'message': 'Recipe deleted'}
 
-'''
-@router.post('/{recipe_id}/ingredients', response_model=RecipePublic)
-def add_recipe_ingredient(recipe_id: int, ingredient: RecipeIngredient):
-    if recipe_id > len(recipes_db) or recipe_id < 1:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
-        )
-
-    recipes_db[recipe_id - 1]['ingredients'].append(ingredient.model_dump())
-    return recipes_db[recipe_id - 1]
-'''
 
 @router.post(
     '/{recipe_id}/ingredients',
@@ -176,17 +164,6 @@ def add_recipe_ingredient(
 
     return RecipePublic.from_orm(db_recipe)
     
-'''
-@router.post('/{recipe_id}/steps', response_model=RecipePublic)
-def add_recipe_steps(recipe_id: int, step: RecipeStep):
-    if recipe_id > len(recipes_db) or recipe_id < 1:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
-        )
-
-    recipes_db[recipe_id - 1]['steps'].append(step.model_dump())
-    return recipes_db[recipe_id - 1]
-'''
 
 @router.post(
     '/{recipe_id}/steps',

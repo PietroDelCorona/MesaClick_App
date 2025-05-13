@@ -93,3 +93,25 @@ class ShoppingListItem:
 
     purchased: Mapped[bool] = mapped_column(default=False)
 
+
+@table_registry.mapped_as_dataclass
+class Supermarkets:
+    __tablename__ = "supermarkets"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    name: Mapped[str] = mapped_column(String(100))
+    address: Mapped[str] = mapped_column(String(255))
+    latitude: Mapped[float]
+    longitude: Mapped[float]
+    opening_hours: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    external_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, unique=True)
+
+    updated_at: Mapped[Optional[datetime]] = mapped_column(onupdate=datetime.now(timezone.utc), init=False)
+
+    shopping_lists: Mapped[List["ShoppingList"]] = relationship(back_populates="supermarket")
+
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+
