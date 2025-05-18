@@ -4,3 +4,4 @@ frontend_clickmesa
 __pycache__/
 *.py[cod]
 *$py.class
+backend_clickmesa/.env
