@@ -1,9 +1,14 @@
 
-export default function Page(){
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
+
+export default function LandingPage(){
     return (
-        <main>
-            <h1>Bem-vindo ao MesaClick!</h1>
-            <p>Gerencie receitas, listas de compras e localização de supermercados.</p>
-        </main>
+        <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-grow"></main>
+            <Footer />
+        </div>
+    
     );
 }

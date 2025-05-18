@@ -1,4 +1,14 @@
 
-export default function Page(){
-    return <p>About Page</p>;
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
+
+export default function AboutPage(){
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Header />
+                <main className="flex-grow"></main>
+            <Footer />
+        </div>
+    );
+
 }
