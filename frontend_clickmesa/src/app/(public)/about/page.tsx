@@ -1,6 +1,6 @@
 
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
+import Header from "@/app/components/OutsiderHeader";
+import Footer from "@/app/components/OutsiderFooter";
 
 export default function AboutPage(){
     return (

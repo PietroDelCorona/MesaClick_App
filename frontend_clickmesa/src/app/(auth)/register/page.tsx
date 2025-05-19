@@ -1,4 +1,13 @@
 
-export default function Page(){
-    return <p>Register Page</p>;
+import Header from "@/app/components/OutsiderHeader";
+import Footer from "@/app/components/OutsiderFooter";
+
+export default function RegisterPage(){
+    return (
+        <div>
+            <Header />
+            <main></main>
+            <Footer />
+        </div>
+    );
 }
