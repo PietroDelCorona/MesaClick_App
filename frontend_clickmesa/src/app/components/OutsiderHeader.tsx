@@ -9,13 +9,13 @@ export default function Header() {
 
                 <div className="flex space-x-6">
                     <Link href="/">Home</Link>
-                    <Link href="/about">About</Link>
-                    <Link href="/login">Sign In</Link>
+                    <Link href="/about">Sobre</Link>
+                    <Link href="/login">Entrar</Link>
                     <Link
                     href="/register"
                     className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
                     >
-                    Sign Up
+                    Cadastre-se
                     </Link>
                 </div>
             </nav>

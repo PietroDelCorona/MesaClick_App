@@ -15,17 +15,17 @@ export default function Page() {
 
                 <main className="ml-64 flex-1 p-4">
                     <div className="space-y-4">
-                        <h1 className="text-4xl text-orange-600 text-center mt-2">Receitas</h1>
+                        <h1 className="text-4xl text-orange-600 text-center mt-2">Minhas Receitas</h1>
                     </div>
 
-                    <div className="relative max-w-xl mx-auto mt-6">
+                    <div  className="relative max-w-xl mx-auto mt-6">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <FaSearch />
                         </div>
                         <input
                         type="text"
                         placeholder="Busque por nome ou ingrediente..."
-                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"                        
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
                         />
                     </div>
 
