@@ -1,5 +1,5 @@
 
-import InsiderHeader from "@/app/components/InsiderHeader";
+import InsiderHeader from "@/components/InsiderHeader";
 
 export default function Page(){
     return (

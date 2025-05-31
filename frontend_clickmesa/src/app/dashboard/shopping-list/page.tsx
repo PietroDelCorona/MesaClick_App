@@ -1,5 +1,5 @@
-import InsiderHeader from "@/app/components/InsiderHeader";
-import Sidebar from "@/app/components/Sidebar";
+import InsiderHeader from "@/components/InsiderHeader";
+import Sidebar from "@/components/Sidebar";
 import { FaListUl } from "react-icons/fa";
 
 export default function Page() {

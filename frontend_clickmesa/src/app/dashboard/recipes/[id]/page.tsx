@@ -1,6 +1,6 @@
 
-import InsiderHeader from "@/app/components/InsiderHeader";
-import Sidebar from "@/app/components/Sidebar";
+import InsiderHeader from "@/components/InsiderHeader";
+import Sidebar from "@/components/Sidebar";
 
 export default function Page(){
     return (

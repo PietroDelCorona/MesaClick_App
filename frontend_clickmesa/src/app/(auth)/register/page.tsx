@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import Header from "@/app/components/OutsiderHeader";
-import Footer from "@/app/components/OutsiderFooter";
+import Header from "@/components/OutsiderHeader";
+import Footer from "@/components/OutsiderFooter";
 
 export default function RegisterPage() {
     return (

@@ -1,5 +1,5 @@
-import InsiderHeader from "@/app/components/InsiderHeader";
-import Sidebar from "@/app/components/Sidebar";
+import InsiderHeader from "@/components/InsiderHeader";
+import Sidebar from "@/components/Sidebar";
 import { FaBowlFood } from "react-icons/fa6";
 import { FaSearch } from "react-icons/fa";
 
