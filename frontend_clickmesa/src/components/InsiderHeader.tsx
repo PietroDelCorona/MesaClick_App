@@ -26,13 +26,14 @@ export default function InsiderHeader() {
           </div>
 
           {/* Links principais (visíveis em TODOS os dispositivos) */}
-          <div className="flex space-x-4 sm:space-x-6 items-center">
+          <div className="flex space-x-2 sm:space-x-4 items-center">
             <Link href="/dashboard" className="text-sm sm:text-base hover:text-orange-500">
               Dashboard
             </Link>
             <Link href="/dashboard/recipes" className="text-sm sm:text-base hover:text-orange-500">
               Receitas
             </Link>
+            <Link href="/dashboard/agenda" className="text-sm sm:text-base hover:text-orange-500">Agenda</Link>
 
             {/* Botão "Sair" (visível apenas em desktop) */}
             <Link
@@ -73,7 +74,7 @@ export default function InsiderHeader() {
             </li>
             <li>
               <Link
-                href="/dashboard/recipes/new"
+                href="/dashboard/recipes/create"
                 className="block p-2 hover:bg-gray-100 rounded transition"
                 onClick={() => setIsSidebarOpen(false)}
               >

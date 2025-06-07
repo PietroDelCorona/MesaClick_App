@@ -22,7 +22,7 @@ export default function Sidebar() {
                         </Link>
                     </li>
                     <li>
-                        <Link href="#" className="block p-2 hover:bg-gray-100 rounded transition">
+                        <Link href="/dashboard/recipes/create" className="block p-2 hover:bg-gray-100 rounded transition">
                             Criar Nova Receita
                         </Link>
                     </li>

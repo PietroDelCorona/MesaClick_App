@@ -1,5 +1,5 @@
 import InsiderHeader from "../../components/InsiderHeader";
-import Sidebar from "../../components/Sidebar";
+/*import Sidebar from "../../components/Sidebar";*/
 
 export default function Page() {
     return (
@@ -11,15 +11,7 @@ export default function Page() {
             
             
             
-            <div className="flex pt-16"> 
-                
-                <Sidebar />
-                
-                
-                <main className="ml-64 flex-1 p-4">
-                    
-                </main>
-            </div>
+            
         </div>
     );
 }

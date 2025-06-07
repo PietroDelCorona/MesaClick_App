@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import Header from "@/components/OutsiderHeader";
+import OutsiderHeader from "@/components/OutsiderHeader";
 import Footer from "@/components/OutsiderFooter";
 
 export default function RegisterPage() {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <Header />
+            <OutsiderHeader />
             
             <main className="flex-grow">
                 <div className="container mx-auto py-12 px-4">
