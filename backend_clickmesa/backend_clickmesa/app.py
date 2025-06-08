@@ -6,7 +6,8 @@ from backend_clickmesa.routes import (
     users,
     recipes,
     shopping_lists,
-    supermarkets
+    supermarkets,
+    schedules
 )
 
 app = FastAPI()
@@ -14,6 +15,7 @@ app.include_router(users.router)
 app.include_router(recipes.router)
 app.include_router(shopping_lists.router)
 app.include_router(supermarkets.router)
+app.include_router(schedules.router)
 
 
 @app.get('/')

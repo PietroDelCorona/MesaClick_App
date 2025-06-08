@@ -1,7 +1,7 @@
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import List, Optional
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import ForeignKey, String, Text, Date, Integer
 from sqlalchemy.orm import Mapped, registry, relationship, mapped_column
 
 table_registry = registry()
@@ -18,6 +18,7 @@ class User:
 
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     shopping_lists: Mapped[List["ShoppingList"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    scheduled_meals:Mapped[List["Schedules"]] = relationship(back_populates="user", cascade="all, delete-orphan", init=False)
 
 
 @table_registry.mapped_as_dataclass
@@ -38,6 +39,7 @@ class Recipe:
     owner: Mapped["User"] = relationship(back_populates="recipes")
     ingredients: Mapped[List["RecipeIngredient"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
     steps: Mapped[List["RecipeStep"]] = relationship(back_populates="recipe", cascade="all, delete-orphan")
+    scheduled_meals: Mapped[List["Schedules"]] = relationship(back_populates="recipe", cascade="all, delete-orphan", init=False)
 
 
 @table_registry.mapped_as_dataclass
@@ -114,4 +116,27 @@ class Supermarkets:
 
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+
+
+@table_registry.mapped_as_dataclass
+class Schedules:
+    __tablename__ = "scheduled_meals"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    scheduled_date: Mapped[date] = mapped_column(Date)
+    meal_type: Mapped[str] = mapped_column(String(20))
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+
+    user: Mapped["User"] = relationship(back_populates="scheduled_meals", init=False)
+    recipe: Mapped["Recipe"] = relationship(back_populates="scheduled_meals", init=False)    
+    
+    portions: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=1)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc), init=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=None, onupdate=datetime.now(timezone.utc), init=False)
+
+
+
+    
 

@@ -5,11 +5,21 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class IngredientItem(BaseModel):
+class ShoppingListItemBase(BaseModel):
     name: str
     quantity: float
     unit: str
+    purchased: bool = False
 
+class ShoppingListItemCreate(ShoppingListItemBase):
+    shopping_list_id: int
+
+class ShoppingListItemPublic(ShoppingListItemBase):
+    id: int
+    shopping_list_id: int
+
+    class Config:
+        from_attributes = True
 
 class ShoppingListBase(BaseModel):
     name: str
@@ -27,11 +37,10 @@ class ShoppingListUpdate(BaseModel):
 class ShoppingListPublic(ShoppingListBase):
     id: int
     created_at: datetime
-    ingredients: List[IngredientItem]
+    items: List[ShoppingListItemPublic]
 
     class Config:
         from_attributes = True
-
 
 class ShoppingListList(BaseModel):
     shopping_lists: List[ShoppingListPublic]
