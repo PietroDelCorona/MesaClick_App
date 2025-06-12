@@ -2,6 +2,7 @@
 
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
+import Link from "next/link";
 import { FaSearch, FaShoppingCart, FaTrash } from "react-icons/fa";
 import { FaBowlFood } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
@@ -86,9 +87,11 @@ export default function Page() {
                     {feature.description}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm">
-                      Ver Detalhes
-                    </button>
+                    <Link href="#">
+                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm">
+                        Ver Detalhes                        
+                      </button>
+                    </Link>
                     <button
                       onClick={() => addItem({ id: feature.id, title: feature.title })}
                       className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm"

@@ -18,10 +18,10 @@ export default function Page() {
         </div>
 
         {/* Main Content - Ajustado para centralização correta */}
-        <main className="flex-1 p-4 sm:ml-64">
-          <div className="flex flex-col items-center"> {/* Container centralizador */}
+        <main className="flex-1 p-4">
+          <div className="w-full max-w-4xl mx-auto flex flex-col items-center"> {/* Container centralizador */}
             <div className="space-y-4">
-                <h1 className="text-4xl text-orange-600 text-center mt-2">
+                <h1 className="text-3xl text-orange-600 text-center mt-2">
                     Minhas Listas de Compras
                 </h1>
             </div>
@@ -66,9 +66,9 @@ export default function Page() {
 
             {/* Botão Criar Nova Lista - centralizado */}
             <div className="mt-10">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md transition-colors flex items-center gap-2">
-                <FaPlus className="text-xl" />
-                <span className="text-xl">Criar Nova Lista</span>
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md transition-colors flex items-center gap-2 text-base">
+                <FaPlus className="text-lg" />
+                <span>Criar Nova Lista</span>
               </button>
             </div>
           </div>
