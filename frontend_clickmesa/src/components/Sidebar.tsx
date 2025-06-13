@@ -17,7 +17,7 @@ export default function Sidebar() {
                         </Link>
                     </li>
                     <li>
-                        <Link href="#" className="block p-2 hover:bg-gray-100 rounded transition">
+                        <Link href="/dashboard/map" className="block p-2 hover:bg-gray-100 rounded transition">
                             Mercados Próximos
                         </Link>
                     </li>

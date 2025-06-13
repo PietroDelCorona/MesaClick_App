@@ -1,2 +1,5 @@
 
 backend_clickmesa
+
+.env
+.env.local
