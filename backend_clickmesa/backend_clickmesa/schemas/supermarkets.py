@@ -17,13 +17,16 @@ class SupermarketBase(BaseModel):
 class SupermarketPublic(SupermarketBase):
     id: int
     class Config:
-        from_attributes= True
+        from_attributes = True
+
 
 class SupermarketCreate(SupermarketBase):
     pass
 
+
 class SupermarketList(BaseModel):
     markets: List[SupermarketPublic]
+
 
 class SupermarketExternal(BaseModel):
     name: str
@@ -34,6 +37,7 @@ class SupermarketExternal(BaseModel):
     rating: Optional[float] = None
     open_now: Optional[bool] = None
     place_id: Optional[int] = None
+
 
 class SupermarketUpdate(BaseModel):
     name: Optional[str] = None

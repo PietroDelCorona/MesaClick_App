@@ -1,6 +1,6 @@
 
+
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
 
 
 class Message(BaseModel):
@@ -20,6 +20,7 @@ class UserPublic(UserBase):
     id: int
     class Config:
         from_attributes = True
+
 
 class UserList(BaseModel):
     users: list[UserPublic]

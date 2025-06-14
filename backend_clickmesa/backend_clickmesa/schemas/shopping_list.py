@@ -11,8 +11,10 @@ class ShoppingListItemBase(BaseModel):
     unit: str
     purchased: bool = False
 
+
 class ShoppingListItemCreate(ShoppingListItemBase):
     shopping_list_id: int
+
 
 class ShoppingListItemPublic(ShoppingListItemBase):
     id: int
@@ -20,6 +22,7 @@ class ShoppingListItemPublic(ShoppingListItemBase):
 
     class Config:
         from_attributes = True
+
 
 class ShoppingListBase(BaseModel):
     name: str
@@ -41,6 +44,7 @@ class ShoppingListPublic(ShoppingListBase):
 
     class Config:
         from_attributes = True
+
 
 class ShoppingListList(BaseModel):
     shopping_lists: List[ShoppingListPublic]

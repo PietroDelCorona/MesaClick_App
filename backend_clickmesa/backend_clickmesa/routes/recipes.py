@@ -3,18 +3,15 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import HttpUrl
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import Recipe
-
-from pydantic import HttpUrl
-
 from backend_clickmesa.schemas.recipes import (
-    RecipeBase,
     RecipeCard,
     RecipeCreate,
     RecipeIngredient,
@@ -22,7 +19,6 @@ from backend_clickmesa.schemas.recipes import (
     RecipeStep,
     RecipeUpdate,
 )
-
 
 router = APIRouter(
     prefix="/recipes",
@@ -33,13 +29,13 @@ router = APIRouter(
 @router.get('/', response_model=List[RecipeCard])
 def read_recipes(
     skip: int = 0,
-    limit: int= 100,
+    limit: int = 100,
     session: Session = Depends(get_session)
 ):
-    
+
     recipes = session.scalars(select(Recipe).offset(skip).limit(limit)).all()
     return recipes
-    
+
 
 @router.get('/{recipe_id}', response_model=RecipePublic)
 def read_recipe(
@@ -53,7 +49,7 @@ def read_recipe(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
+
     return db_recipe
 
 
@@ -70,7 +66,7 @@ def create_recipe(
     session.add(db_recipe)
     session.commit()
     session.refresh(db_recipe)
-    
+
     return db_recipe
 
 
@@ -87,28 +83,28 @@ def update_recipe(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
+
     try:
         update_data = recipe.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_recipe, field, value)
-        
-        db_recipe.updated_at = datetime.now(timezone.utc)  
+
+        db_recipe.updated_at = datetime.now(timezone.utc)
         session.commit()
         session.refresh(db_recipe)
         return db_recipe
-    
-    except IntegrityError as e:
+
+    except IntegrityError:
         session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
             detail='Database integrity error'
         )
-    
-    
+
+
 @router.delete('/{recipe_id}', status_code=HTTPStatus.OK)
 def delete_recipe(
-    recipe_id: int, 
+    recipe_id: int,
     session: Session = Depends(get_session)
 ):
     db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
@@ -118,7 +114,7 @@ def delete_recipe(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
+
     session.delete(db_recipe)
     session.commit()
 
@@ -135,7 +131,7 @@ def add_recipe_ingredient(
     ingredient: RecipeIngredient,
     session: Session = Depends(get_session)
 ):
-    
+
     db_recipe = session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
@@ -145,25 +141,24 @@ def add_recipe_ingredient(
     if not db_recipe:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Recipe not found'  
+            detail='Recipe not found'
         )
-    
-    
+
     new_ingredient = RecipeIngredient(
         name=ingredient.name,
         quantity=ingredient.quantity,
         unit=ingredient.unit,
         category=ingredient.category,
-        recipe_id=recipe_id 
+        recipe_id=recipe_id
     )
-    
+
     session.add(new_ingredient)
     db_recipe.updated_at = datetime.now(timezone.utc)
     session.commit()
     session.refresh(db_recipe)
 
     return RecipePublic.from_orm(db_recipe)
-    
+
 
 @router.post(
     '/{recipe_id}/steps',
@@ -175,7 +170,7 @@ def add_recipe_steps(
     step: RecipeStep,
     session: Session = Depends(get_session)
 ):
-    
+
     db_recipe = session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
@@ -190,24 +185,21 @@ def add_recipe_steps(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
-    
-    if any(existing.step_number == step.step_number 
+
+    if any(existing.step_number == step.step_number
            for existing in db_recipe.steps):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=f'Step number {step.step_number} already exists in this recipe'
         )
-    
-    
+
     new_step = RecipeStep(
         step_number=step.step_number,
         instruction=step.instruction,
         duration_minutes=step.duration_minutes,
         recipe_id=recipe_id
     )
-    
-    
+
     session.add(new_step)
     db_recipe.updated_at = datetime.now(timezone.utc)
     session.commit()
@@ -222,10 +214,10 @@ def add_recipe_steps(
 )
 def update_recipe_image_url(
     recipe_id: int,
-    image_url: HttpUrl, 
+    image_url: HttpUrl,
     session: Session = Depends(get_session)
 ):
-    
+
     db_recipe = session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
@@ -234,17 +226,17 @@ def update_recipe_image_url(
             selectinload(Recipe.steps)
         )
     )
-    
+
     if not db_recipe:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
+
     db_recipe.image_url = str(image_url)
     db_recipe.updated_at = datetime.now(timezone.utc)
-    
+
     session.commit()
     session.refresh(db_recipe)
-    
+
     return RecipePublic.from_orm(db_recipe)

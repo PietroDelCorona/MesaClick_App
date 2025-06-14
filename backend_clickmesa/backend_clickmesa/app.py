@@ -1,13 +1,12 @@
 
 from fastapi import FastAPI
 
-
 from backend_clickmesa.routes import (
-    users,
     recipes,
+    schedules,
     shopping_lists,
     supermarkets,
-    schedules
+    users,
 )
 
 app = FastAPI()
@@ -21,26 +20,3 @@ app.include_router(schedules.router)
 @app.get('/')
 def hello_world():
     return {'message': 'Hello to Click Mesa App API.'}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

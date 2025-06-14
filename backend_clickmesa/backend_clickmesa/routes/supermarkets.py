@@ -1,32 +1,27 @@
 
+import os
+from datetime import datetime, timezone
 from http import HTTPStatus
-
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from httpx import AsyncClient
 from typing import List
 
-import os
-
-from datetime import datetime, timezone
-
-from backend_clickmesa.models import Supermarkets
+from fastapi import APIRouter, Depends, HTTPException
+from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from backend_clickmesa.database import get_session
-
-
+from backend_clickmesa.models import Supermarkets
 from backend_clickmesa.schemas.supermarkets import (
     SupermarketExternal,
     SupermarketPublic,
-    SupermarketUpdate
+    SupermarketUpdate,
 )
-
 
 router = APIRouter(
     prefix="/supermarkets",
     tags=["supermarkets"]
 )
+
 
 @router.get('/nearby', response_model=List[SupermarketExternal])
 async def get_nearby_markets(
@@ -35,7 +30,7 @@ async def get_nearby_markets(
     radius: int = 1000,
     open_now: bool = True
 ):
-    
+
     API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
     if not API_KEY:
@@ -43,7 +38,7 @@ async def get_nearby_markets(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail='Google Maps API key not configured'
         )
-    
+
     params = {
         "location": f"{lat},{lng}",
         "radius": min(radius, 50000),
@@ -53,12 +48,12 @@ async def get_nearby_markets(
 
     if open_now:
         params["opennow"] = "true"
-    
+
     async with AsyncClient() as client:
         try:
             response = await client.get(
                 "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-                params = params
+                params=params
             )
             data = response.json()
 
@@ -67,7 +62,7 @@ async def get_nearby_markets(
                     status_code=HTTPStatus.BAD_REQUEST,
                     detail=f"Google API error: {data.get('error_message', 'Unknown error')}"
                 )
-    
+
             return [
                 SupermarketExternal(
                     name=place["name"],
@@ -85,7 +80,7 @@ async def get_nearby_markets(
                 status_code=HTTPStatus.BAD_GATEWAY,
                 detail=f'Error accessing Google API: {str(e)}'
             )
-        
+
 
 @router.get('/favorites', response_model=List[SupermarketPublic])
 def list_favorites(
@@ -108,17 +103,17 @@ def read_favorite_supermarket_by_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Supermarket not found in favorites'
         )
-    
+
     return db_supermarket
 
-   
+
 @router.post('/favorites', response_model=SupermarketPublic, status_code=HTTPStatus.CREATED)
 def add_favorite(
     supermarket: SupermarketExternal,
     session: Session = Depends(get_session),
 ):
-    
-    existing= session.scalar(
+
+    existing = session.scalar(
         select(Supermarkets)
         .where(Supermarkets.external_id == supermarket.place_id)
     )
@@ -160,7 +155,7 @@ def update_favorite_supermarket(
     supermarket_data: SupermarketPublic,
     session: Session = Depends(get_session)
 ):
-    
+
     db_supermarket = session.scalar(select(Supermarkets).where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
@@ -168,7 +163,7 @@ def update_favorite_supermarket(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Supermarket not found in favorites'
         )
-    
+
     try:
         db_supermarket.name = supermarket_data.name
         db_supermarket.address = supermarket_data.address
@@ -193,7 +188,7 @@ def delete_favorite_supermarket(
     supermarket_id: int,
     session: Session = Depends(get_session)
 ):
-    
+
     db_supermarket = session.scalar(select(Supermarkets).where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
@@ -201,7 +196,7 @@ def delete_favorite_supermarket(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Supermarket not found in favorites'
         )
-    
+
     try:
         session.delete(db_supermarket)
         session.commit()

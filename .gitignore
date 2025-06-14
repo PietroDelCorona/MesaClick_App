@@ -5,3 +5,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 backend_clickmesa/.env
+.env

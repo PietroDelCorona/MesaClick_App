@@ -1,25 +1,25 @@
 
 from http import HTTPStatus
-from datetime import date
-from fastapi import APIRouter, Depends, HTTPException   
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend_clickmesa.database import get_session
-from backend_clickmesa.models import User, Recipe, Schedules
+from backend_clickmesa.models import Recipe, Schedules, User
 from backend_clickmesa.schemas.schedule import (
-    ScheduleBase,
+    Message,
     ScheduleCreate,
     SchedulePublic,
     ScheduleUpdate,
-    Message    
 )
 
 router = APIRouter(
     prefix="/schedules",
     tags=["schedules"]
 )
+
 
 @router.get('/', response_model=list[SchedulePublic])
 def read_schedules(
@@ -35,6 +35,7 @@ def read_schedules(
 
     return schedules
 
+
 @router.get('/{schedule_id}', response_model=SchedulePublic)
 def read_schedule_by_id(
     schedule_id: int,
@@ -49,9 +50,10 @@ def read_schedule_by_id(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Schedule not found'
-        )    
-    
+        )
+
     return db_schedule
+
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=SchedulePublic)
 def create_schedule(
@@ -68,7 +70,7 @@ def create_schedule(
             status_code=HTTPStatus.NOT_FOUND,
             detail='User not found'
         )
-    
+
     db_recipe = session.scalar(
         select(Recipe)
         .where(Recipe.id == schedule.recipe_id)
@@ -79,7 +81,7 @@ def create_schedule(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Recipe not found'
         )
-    
+
     db_schedule = Schedules(
         scheduled_date=schedule.schedule_date,
         meal_type=schedule.meal_type,
@@ -101,7 +103,7 @@ def update_schedule(
     schedule: ScheduleUpdate,
     session: Session = Depends(get_session)
 ):
-    
+
     db_schedule = session.scalar(
         select(Schedules)
         .where(Schedules.id == schedule_id)
@@ -112,7 +114,7 @@ def update_schedule(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Schedule not found'
         )
-    
+
     if schedule.recipe_id:
         db_recipe = session.scalar(
             select(Recipe)
@@ -124,7 +126,7 @@ def update_schedule(
                 status_code=HTTPStatus.NOT_FOUND,
                 detail='Recipe not found'
             )
-    
+
     try:
         if schedule.scheduled_date:
             db_schedule.scheduled_date = schedule.scheduled_date
@@ -134,7 +136,7 @@ def update_schedule(
             db_schedule.portions = schedule.portions
         if schedule.recipe_id:
             db_schedule.recipe_id = schedule.recipe_id
-        
+
         session.commit()
         session.refresh(db_schedule)
 
@@ -142,9 +144,9 @@ def update_schedule(
     except IntegrityError:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            detail='Invalid data',  
+            detail='Invalid data',
         )
-    
+
 
 @router.delete('/{schedule_id}', response_model=Message)
 def delete_schedule(
@@ -161,7 +163,7 @@ def delete_schedule(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Schedule not found'
         )
-    
+
     session.delete(db_schedule)
     session.commit()
 
