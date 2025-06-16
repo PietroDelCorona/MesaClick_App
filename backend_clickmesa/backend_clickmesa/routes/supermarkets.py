@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from httpx import AsyncClient
@@ -21,6 +21,8 @@ router = APIRouter(
     prefix="/supermarkets",
     tags=["supermarkets"]
 )
+
+Session = Annotated[Session, Depends(get_session)]
 
 
 @router.get('/nearby', response_model=List[SupermarketExternal])
@@ -60,7 +62,8 @@ async def get_nearby_markets(
             if data.get("status") != "OK":
                 raise HTTPException(
                     status_code=HTTPStatus.BAD_REQUEST,
-                    detail=f"Google API error: {data.get('error_message', 'Unknown error')}"
+                    detail=f"Google API error: {data.get('error_message',
+                                                        'Unknown error')}"
                 )
 
             return [
@@ -71,7 +74,8 @@ async def get_nearby_markets(
                     longitude=place["geometry"]["location"]["lng"],
                     place_id=place["place_id"],
                     rating=place.get("rating"),
-                    open_now="opening_hours" in place and place["opening_hours"].get("open_now", False)
+                    open_now="opening_hours" in place and
+                    place["opening_hours"].get("open_now", False)
                 )
                 for place in data.get("results", [])
             ]
@@ -84,19 +88,21 @@ async def get_nearby_markets(
 
 @router.get('/favorites', response_model=List[SupermarketPublic])
 def list_favorites(
-    session: Session = Depends(get_session)
+    session: Annotated[Session, Depends(get_session)],
 ):
     favorite_supermarkets = session.scalars(select(Supermarkets)).all()
 
     return favorite_supermarkets
 
 
-@router.get('/favorites/{supermarket_id}', response_model=SupermarketPublic)
+@router.get('/favorites/{supermarket_id}',
+            response_model=SupermarketPublic)
 def read_favorite_supermarket_by_id(
+    session: Annotated[Session, Depends(get_session)],
     supermarket_id: int,
-    session: Session = Depends(get_session)
 ):
-    db_supermarket = session.scalar(select(Supermarkets).where(Supermarkets.id == supermarket_id))
+    db_supermarket = session.scalar(select(Supermarkets)
+                    .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
         raise HTTPException(
@@ -107,10 +113,12 @@ def read_favorite_supermarket_by_id(
     return db_supermarket
 
 
-@router.post('/favorites', response_model=SupermarketPublic, status_code=HTTPStatus.CREATED)
+@router.post('/favorites',
+            response_model=SupermarketPublic,
+            status_code=HTTPStatus.CREATED)
 def add_favorite(
+    session: Annotated[Session, Depends(get_session)],
     supermarket: SupermarketExternal,
-    session: Session = Depends(get_session),
 ):
 
     existing = session.scalar(
@@ -149,14 +157,16 @@ def add_favorite(
         )
 
 
-@router.put('/favorites/{supermarket_id}', response_model=SupermarketUpdate)
+@router.put('/favorites/{supermarket_id}',
+            response_model=SupermarketUpdate)
 def update_favorite_supermarket(
+    session: Annotated[Session, Depends(get_session)],
     supermarket_id: int,
     supermarket_data: SupermarketPublic,
-    session: Session = Depends(get_session)
 ):
 
-    db_supermarket = session.scalar(select(Supermarkets).where(Supermarkets.id == supermarket_id))
+    db_supermarket = session.scalar(select(Supermarkets)
+                            .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
         raise HTTPException(
@@ -183,13 +193,15 @@ def update_favorite_supermarket(
         )
 
 
-@router.delete('/favorites/{supermarket_id}', status_code=HTTPStatus.OK)
+@router.delete('/favorites/{supermarket_id}',
+                status_code=HTTPStatus.OK)
 def delete_favorite_supermarket(
+    session: Annotated[Session, Depends(get_session)],
     supermarket_id: int,
-    session: Session = Depends(get_session)
 ):
 
-    db_supermarket = session.scalar(select(Supermarkets).where(Supermarkets.id == supermarket_id))
+    db_supermarket = session.scalar(select(Supermarkets)
+                    .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
         raise HTTPException(

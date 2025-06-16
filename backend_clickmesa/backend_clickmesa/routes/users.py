@@ -1,5 +1,6 @@
 
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -24,12 +25,15 @@ router = APIRouter(
     tags=["users"]
 )
 
+Session = Annotated[Session, Depends(get_session)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
+
 
 @router.get('/', response_model=UserPublic)
 def read_users(
+    session: Annotated[Session, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
-    session: Session = Depends(get_session)
 ):
 
     users = session.scalars(select(User).offset(skip).limit(limit)).all()
@@ -38,8 +42,8 @@ def read_users(
 
 @router.get('/{user_id}', response_model=UserPublic)
 def read_user_by_id(
+    session: Annotated[Session, Depends(get_session)],
     user_id: int,
-    session: Session = Depends(get_session)
 ):
     db_user = session.scalar(select(User).where(User.id == user_id))
 
@@ -55,7 +59,7 @@ def read_user_by_id(
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 def create_user(
     user: UserCreate,
-    session: Session = Depends(get_session)
+    session: Annotated[Session, Depends(get_session)],
 ):
     db_user = session.scalar(
         select(User).where(
@@ -89,10 +93,10 @@ def create_user(
 
 @router.put('/{user_id}', response_model=UserPublic)
 def update_user(
+    session: Annotated[Session, Depends(get_session)],
+    current_user: CurrentUser,
     user_id: int,
     user: UserBase,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user),
 ):
     if current_user.id != user_id:
         raise HTTPException(
@@ -117,9 +121,9 @@ def update_user(
 
 @router.delete('/{user_id}', response_model=Message)
 def delete_user(
+    session: Annotated[Session, Depends(get_session)],
+    current_user: CurrentUser,
     user_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
 ):
     if current_user.id != user_id:
         raise HTTPException(

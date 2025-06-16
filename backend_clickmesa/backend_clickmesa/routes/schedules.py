@@ -1,5 +1,6 @@
 
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -20,12 +21,14 @@ router = APIRouter(
     tags=["schedules"]
 )
 
+Session = Annotated[Session, Depends(get_session)]
+
 
 @router.get('/', response_model=list[SchedulePublic])
 def read_schedules(
+    session: Annotated[Session, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
-    session: Session = Depends(get_session)
 ):
     schedules = session.scalars(
         select(Schedules)
@@ -38,8 +41,8 @@ def read_schedules(
 
 @router.get('/{schedule_id}', response_model=SchedulePublic)
 def read_schedule_by_id(
+    session: Annotated[Session, Depends(get_session)],
     schedule_id: int,
-    session: Session = Depends(get_session)
 ):
     db_schedule = session.scalar(
         select(Schedules)
@@ -55,10 +58,11 @@ def read_schedule_by_id(
     return db_schedule
 
 
-@router.post('/', status_code=HTTPStatus.CREATED, response_model=SchedulePublic)
+@router.post('/', status_code=HTTPStatus.CREATED,
+            response_model=SchedulePublic)
 def create_schedule(
+    session: Annotated[Session, Depends(get_session)],
     schedule: ScheduleCreate,
-    session: Session = Depends(get_session)
 ):
     db_user = session.scalar(
         select(User)
@@ -97,11 +101,12 @@ def create_schedule(
     return db_schedule
 
 
-@router.put('/{schedule_id}', response_model=SchedulePublic)
+@router.put('/{schedule_id}',
+            response_model=SchedulePublic)
 def update_schedule(
+    session: Annotated[Session, Depends(get_session)],
     schedule_id: int,
     schedule: ScheduleUpdate,
-    session: Session = Depends(get_session)
 ):
 
     db_schedule = session.scalar(
@@ -148,10 +153,11 @@ def update_schedule(
         )
 
 
-@router.delete('/{schedule_id}', response_model=Message)
+@router.delete('/{schedule_id}',
+               response_model=Message)
 def delete_schedule(
+    session: Annotated[Session, Depends(get_session)],
     schedule_id: int,
-    session: Session = Depends(get_session)
 ):
     db_schedule = session.scalar(
         select(Schedules)

@@ -1,7 +1,7 @@
 
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import HttpUrl
@@ -25,12 +25,14 @@ router = APIRouter(
     tags=["recipes"]
 )
 
+Session = Annotated[Session, Depends(get_session)]
+
 
 @router.get('/', response_model=List[RecipeCard])
 def read_recipes(
+    session: Annotated[Session, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
-    session: Session = Depends(get_session)
 ):
 
     recipes = session.scalars(select(Recipe).offset(skip).limit(limit)).all()
@@ -39,8 +41,8 @@ def read_recipes(
 
 @router.get('/{recipe_id}', response_model=RecipePublic)
 def read_recipe(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
-    session: Session = Depends(get_session)
 ):
     db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
 
@@ -59,8 +61,8 @@ def read_recipe(
     response_model=RecipePublic
 )
 def create_recipe(
+    session: Annotated[Session, Depends(get_session)],
     recipe: RecipeCreate,
-    session: Session = Depends(get_session)
 ):
     db_recipe = Recipe(**recipe.model_dump())
     session.add(db_recipe)
@@ -72,9 +74,9 @@ def create_recipe(
 
 @router.put('/{recipe_id}', response_model=RecipePublic)
 def update_recipe(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
     recipe: RecipeUpdate,
-    session: Session = Depends(get_session)
 ):
     db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
 
@@ -104,8 +106,8 @@ def update_recipe(
 
 @router.delete('/{recipe_id}', status_code=HTTPStatus.OK)
 def delete_recipe(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
-    session: Session = Depends(get_session)
 ):
     db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
 
@@ -127,9 +129,9 @@ def delete_recipe(
     response_model=RecipePublic
 )
 def add_recipe_ingredient(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
     ingredient: RecipeIngredient,
-    session: Session = Depends(get_session)
 ):
 
     db_recipe = session.scalar(
@@ -166,9 +168,9 @@ def add_recipe_ingredient(
     response_model=RecipePublic
 )
 def add_recipe_steps(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
     step: RecipeStep,
-    session: Session = Depends(get_session)
 ):
 
     db_recipe = session.scalar(
@@ -190,7 +192,9 @@ def add_recipe_steps(
            for existing in db_recipe.steps):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
-            detail=f'Step number {step.step_number} already exists in this recipe'
+            detail=(
+                f'Step number {step.step_number} already exists in this recipe'
+            )
         )
 
     new_step = RecipeStep(
@@ -213,9 +217,9 @@ def add_recipe_steps(
     response_model=RecipePublic
 )
 def update_recipe_image_url(
+    session: Annotated[Session, Depends(get_session)],
     recipe_id: int,
     image_url: HttpUrl,
-    session: Session = Depends(get_session)
 ):
 
     db_recipe = session.scalar(

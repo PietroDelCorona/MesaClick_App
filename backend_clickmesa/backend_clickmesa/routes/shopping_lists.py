@@ -1,5 +1,6 @@
 
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -24,12 +25,14 @@ router = APIRouter(
     tags=["shopping-lists"]
 )
 
+Session = Annotated[Session, Depends(get_session)]
+
 
 @router.get('/', response_model=list[ShoppingListPublic])
 def read_shopping_lists(
+    session: Annotated[Session, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
-    session: Session = Depends(get_session)
 ):
     shopping_lists = session.scalars(
         select(ShoppingList)
@@ -42,8 +45,8 @@ def read_shopping_lists(
 
 @router.get('/{shopping_list_id}', response_model=ShoppingListPublic)
 def read_shopping_list(
+    session: Annotated[Session, Depends(get_session)],
     shopping_list_id: int,
-    session: Session = Depends(get_session)
 ):
     db_shopping_list = session.scalar(
         select(ShoppingList)
@@ -67,7 +70,7 @@ def read_shopping_list(
 )
 def create_shopping_list(
     shopping_list: ShoppingListCreate,
-    session: Session = Depends(get_session)
+    session: Annotated[Session, Depends(get_session)],
 ):
     db_shopping_list = ShoppingList(**shopping_list.model_dump())
     session.add(db_shopping_list)
@@ -79,9 +82,9 @@ def create_shopping_list(
 
 @router.put("/{shopping_list_id}", response_model=ShoppingListPublic)
 def update_shopping_list(
+    session: Annotated[Session, Depends(get_session)],
     shopping_list_id: int,
     shopping_list: ShoppingListUpdate,
-    session: Session = Depends(get_session)
 ):
 
     db_shopping_list = session.scalar(
@@ -114,8 +117,8 @@ def update_shopping_list(
 
 @router.delete('/{shopping_list_id}', status_code=HTTPStatus.OK)
 def delete_shopping_list(
+    session: Annotated[Session, Depends(get_session)],
     shopping_list_id: int,
-    session: Session = Depends(get_session)
 ):
 
     db_shopping_list = session.scalar(
@@ -141,9 +144,9 @@ def delete_shopping_list(
     status_code=HTTPStatus.CREATED
 )
 def add_item_to_list(
+    session: Annotated[Session, Depends(get_session)],
     shopping_list_id: int,
     item: ShoppingListItemCreate,
-    session: Session = Depends(get_session)
 ):
 
     db_shopping_list = session.scalar(
@@ -174,9 +177,9 @@ def add_item_to_list(
 
 @router.put('/items/{item_id}', response_model=ShoppingListItemPublic)
 def update_shopping_list_item(
+    session: Annotated[Session, Depends(get_session)],
     item_id: int,
     item_update: ShoppingListItemBase,
-    session: Session = Depends(get_session)
 ):
 
     db_item = session.scalar(
@@ -201,8 +204,8 @@ def update_shopping_list_item(
 
 @router.delete('/items/{item_id}', status_code=HTTPStatus.NO_CONTENT)
 def delete_shopping_list_item(
+    session: Annotated[Session, Depends(get_session)],
     item_id: int,
-    session: Session = Depends(get_session)
 ):
 
     db_item = session.scalar(

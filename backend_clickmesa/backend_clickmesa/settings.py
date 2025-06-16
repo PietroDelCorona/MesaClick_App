@@ -10,3 +10,5 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     GOOGLE_MAPS_API_KEY: str
     JWT_SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRES_MINUTES: int
