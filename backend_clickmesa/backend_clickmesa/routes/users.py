@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import User
@@ -25,27 +25,35 @@ router = APIRouter(
     tags=["users"]
 )
 
-Session = Annotated[Session, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.get('/', response_model=UserPublic)
-def read_users(
-    session: Annotated[Session, Depends(get_session)],
+async def read_users(
+    session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
 ):
 
-    users = session.scalars(select(User).offset(skip).limit(limit)).all()
+    query = await session.scalars(select(User)
+                    .offset(skip)
+                    .limit(limit)
+    )
+
+    users = query.all()
+
     return {'users': users}
 
 
 @router.get('/{user_id}', response_model=UserPublic)
-def read_user_by_id(
-    session: Annotated[Session, Depends(get_session)],
+async def read_user_by_id(
+    session: Annotated[AsyncSession, Depends(get_session)],
     user_id: int,
 ):
-    db_user = session.scalar(select(User).where(User.id == user_id))
+    db_user = await session.scalar(select(User)
+                                .where(User.id == user_id)
+                            )
 
     if not db_user:
         raise HTTPException(
@@ -57,11 +65,11 @@ def read_user_by_id(
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(
+async def create_user(
     user: UserCreate,
-    session: Annotated[Session, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    db_user = session.scalar(
+    db_user = await session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
         )
@@ -85,15 +93,15 @@ def create_user(
         username=user.username, password=hashed_password, email=user.email
     )
     session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    await session.commit()
+    await session.refresh(db_user)
 
     return db_user
 
 
 @router.put('/{user_id}', response_model=UserPublic)
-def update_user(
-    session: Annotated[Session, Depends(get_session)],
+async def update_user(
+    session: Annotated[AsyncSession, Depends(get_session)],
     current_user: CurrentUser,
     user_id: int,
     user: UserBase,
@@ -108,8 +116,8 @@ def update_user(
         current_user.username = user.username
         current_user.password = get_password_hash(user.password)
         current_user.email = user.email
-        session.commit()
-        session.refresh(current_user)
+        await session.commit()
+        await session.refresh(current_user)
 
         return current_user
     except IntegrityError:
@@ -120,8 +128,8 @@ def update_user(
 
 
 @router.delete('/{user_id}', response_model=Message)
-def delete_user(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_user(
+    session: Annotated[AsyncSession, Depends(get_session)],
     current_user: CurrentUser,
     user_id: int,
 ):
@@ -131,7 +139,7 @@ def delete_user(
             detail='Not enough permissions'
         )
 
-    session.delete(current_user)
-    session.commit()
+    await session.delete(current_user)
+    await session.commit()
 
     return {'message': 'User deleted'}

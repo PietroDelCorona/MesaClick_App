@@ -7,7 +7,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
 from httpx import AsyncClient
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import Supermarkets
@@ -22,7 +22,7 @@ router = APIRouter(
     tags=["supermarkets"]
 )
 
-Session = Annotated[Session, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 @router.get('/nearby', response_model=List[SupermarketExternal])
@@ -87,21 +87,23 @@ async def get_nearby_markets(
 
 
 @router.get('/favorites', response_model=List[SupermarketPublic])
-def list_favorites(
-    session: Annotated[Session, Depends(get_session)],
+async def list_favorites(
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    favorite_supermarkets = session.scalars(select(Supermarkets)).all()
+    query = await session.scalars(select(Supermarkets))
+
+    favorite_supermarkets = query.all()
 
     return favorite_supermarkets
 
 
 @router.get('/favorites/{supermarket_id}',
             response_model=SupermarketPublic)
-def read_favorite_supermarket_by_id(
-    session: Annotated[Session, Depends(get_session)],
+async def read_favorite_supermarket_by_id(
+    session: Annotated[AsyncSession, Depends(get_session)],
     supermarket_id: int,
 ):
-    db_supermarket = session.scalar(select(Supermarkets)
+    db_supermarket = await session.scalar(select(Supermarkets)
                     .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
@@ -116,12 +118,12 @@ def read_favorite_supermarket_by_id(
 @router.post('/favorites',
             response_model=SupermarketPublic,
             status_code=HTTPStatus.CREATED)
-def add_favorite(
-    session: Annotated[Session, Depends(get_session)],
+async def add_favorite(
+    session: Annotated[AsyncSession, Depends(get_session)],
     supermarket: SupermarketExternal,
 ):
 
-    existing = session.scalar(
+    existing = await session.scalar(
         select(Supermarkets)
         .where(Supermarkets.external_id == supermarket.place_id)
     )
@@ -145,12 +147,13 @@ def add_favorite(
             updated_at=datetime.now(timezone.utc)
         )
         session.add(db_supermarket)
-        session.commit()
-        session.refresh(db_supermarket)
+        await session.commit()
+        await session.refresh(db_supermarket)
 
         return db_supermarket
+
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f'Error saving supermarket: {str(e)}'
@@ -159,13 +162,13 @@ def add_favorite(
 
 @router.put('/favorites/{supermarket_id}',
             response_model=SupermarketUpdate)
-def update_favorite_supermarket(
-    session: Annotated[Session, Depends(get_session)],
+async def update_favorite_supermarket(
+    session: Annotated[AsyncSession, Depends(get_session)],
     supermarket_id: int,
     supermarket_data: SupermarketPublic,
 ):
 
-    db_supermarket = session.scalar(select(Supermarkets)
+    db_supermarket = await session.scalar(select(Supermarkets)
                             .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
@@ -181,12 +184,13 @@ def update_favorite_supermarket(
         db_supermarket.rating = supermarket_data.rating
         db_supermarket.updated_at = datetime.now(timezone.utc)
 
-        session.commit()
-        session.refresh(db_supermarket)
+        await session.commit()
+        await session.refresh(db_supermarket)
 
         return db_supermarket
+
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f'Error updating supermarket: {str(e)}'
@@ -195,12 +199,12 @@ def update_favorite_supermarket(
 
 @router.delete('/favorites/{supermarket_id}',
                 status_code=HTTPStatus.OK)
-def delete_favorite_supermarket(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_favorite_supermarket(
+    session: Annotated[AsyncSession, Depends(get_session)],
     supermarket_id: int,
 ):
 
-    db_supermarket = session.scalar(select(Supermarkets)
+    db_supermarket = await session.scalar(select(Supermarkets)
                     .where(Supermarkets.id == supermarket_id))
 
     if not db_supermarket:
@@ -210,10 +214,10 @@ def delete_favorite_supermarket(
         )
 
     try:
-        session.delete(db_supermarket)
-        session.commit()
+        await session.delete(db_supermarket)
+        await session.commit()
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f'Error deleting supermarket: {str(e)}'

@@ -5,7 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import ShoppingList, ShoppingListItem
@@ -25,16 +26,16 @@ router = APIRouter(
     tags=["shopping-lists"]
 )
 
-Session = Annotated[Session, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 @router.get('/', response_model=list[ShoppingListPublic])
-def read_shopping_lists(
-    session: Annotated[Session, Depends(get_session)],
+async def read_shopping_lists(
+    session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
 ):
-    shopping_lists = session.scalars(
+    shopping_lists = await session.scalars(
         select(ShoppingList)
         .offset(skip)
         .limit(limit)
@@ -44,11 +45,11 @@ def read_shopping_lists(
 
 
 @router.get('/{shopping_list_id}', response_model=ShoppingListPublic)
-def read_shopping_list(
-    session: Annotated[Session, Depends(get_session)],
+async def read_shopping_list(
+    session: Annotated[AsyncSession, Depends(get_session)],
     shopping_list_id: int,
 ):
-    db_shopping_list = session.scalar(
+    db_shopping_list = await session.scalar(
         select(ShoppingList)
         .options(joinedload(ShoppingList.items))
         .where(ShoppingList.id == shopping_list_id)
@@ -68,26 +69,26 @@ def read_shopping_list(
     status_code=HTTPStatus.CREATED,
     response_model=ShoppingListPublic
 )
-def create_shopping_list(
+async def create_shopping_list(
     shopping_list: ShoppingListCreate,
-    session: Annotated[Session, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     db_shopping_list = ShoppingList(**shopping_list.model_dump())
     session.add(db_shopping_list)
-    session.commit()
-    session.refresh(db_shopping_list)
+    await session.commit()
+    await session.refresh(db_shopping_list)
 
     return db_shopping_list
 
 
 @router.put("/{shopping_list_id}", response_model=ShoppingListPublic)
-def update_shopping_list(
-    session: Annotated[Session, Depends(get_session)],
+async def update_shopping_list(
+    session: Annotated[AsyncSession, Depends(get_session)],
     shopping_list_id: int,
     shopping_list: ShoppingListUpdate,
 ):
 
-    db_shopping_list = session.scalar(
+    db_shopping_list = await session.scalar(
         select(ShoppingList)
         .where(ShoppingList.id == shopping_list_id)
     )
@@ -103,12 +104,12 @@ def update_shopping_list(
         for field, value in update_list.items():
             setattr(db_shopping_list, field, value)
 
-        session.commit()
-        session.refresh(db_shopping_list)
+        await session.commit()
+        await session.refresh(db_shopping_list)
         return db_shopping_list
 
     except IntegrityError:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
             detail='Database integrity error'
@@ -116,12 +117,12 @@ def update_shopping_list(
 
 
 @router.delete('/{shopping_list_id}', status_code=HTTPStatus.OK)
-def delete_shopping_list(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_shopping_list(
+    session: Annotated[AsyncSession, Depends(get_session)],
     shopping_list_id: int,
 ):
 
-    db_shopping_list = session.scalar(
+    db_shopping_list = await session.scalar(
         select(ShoppingList)
         .where(ShoppingList.id == shopping_list_id)
     )
@@ -132,8 +133,8 @@ def delete_shopping_list(
             detail='Shopping List not found'
         )
 
-    session.delete(db_shopping_list)
-    session.commit()
+    await session.delete(db_shopping_list)
+    await session.commit()
 
     return {'message': 'Shopping List deleted'}
 
@@ -143,13 +144,13 @@ def delete_shopping_list(
     response_model=ShoppingListItemPublic,
     status_code=HTTPStatus.CREATED
 )
-def add_item_to_list(
-    session: Annotated[Session, Depends(get_session)],
+async def add_item_to_list(
+    session: Annotated[AsyncSession, Depends(get_session)],
     shopping_list_id: int,
     item: ShoppingListItemCreate,
 ):
 
-    db_shopping_list = session.scalar(
+    db_shopping_list = await session.scalar(
         select(ShoppingList)
         .where(ShoppingList.id == shopping_list_id)
     )
@@ -169,20 +170,20 @@ def add_item_to_list(
     )
 
     session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
+    await session.commit()
+    await session.refresh(db_item)
 
     return db_item
 
 
 @router.put('/items/{item_id}', response_model=ShoppingListItemPublic)
-def update_shopping_list_item(
-    session: Annotated[Session, Depends(get_session)],
+async def update_shopping_list_item(
+    session: Annotated[AsyncSession, Depends(get_session)],
     item_id: int,
     item_update: ShoppingListItemBase,
 ):
 
-    db_item = session.scalar(
+    db_item = await session.scalar(
         select(ShoppingListItem)
         .where(ShoppingListItem.id == item_id)
     )
@@ -196,19 +197,19 @@ def update_shopping_list_item(
     for field, value in item_update.model_dump().items():
         setattr(db_item, field, value)
 
-    session.commit()
-    session.refresh(db_item)
+    await session.commit()
+    await session.refresh(db_item)
 
     return db_item
 
 
 @router.delete('/items/{item_id}', status_code=HTTPStatus.NO_CONTENT)
-def delete_shopping_list_item(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_shopping_list_item(
+    session: Annotated[AsyncSession, Depends(get_session)],
     item_id: int,
 ):
 
-    db_item = session.scalar(
+    db_item = await session.scalar(
         select(ShoppingListItem)
         .where(ShoppingListItem.id == item_id)
     )
@@ -219,5 +220,5 @@ def delete_shopping_list_item(
             detail='Item not found'
         )
 
-    session.delete(db_item)
-    session.commit()
+    await session.delete(db_item)
+    await session.commit()

@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import HttpUrl
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import Recipe
@@ -25,26 +26,31 @@ router = APIRouter(
     tags=["recipes"]
 )
 
-Session = Annotated[Session, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 @router.get('/', response_model=List[RecipeCard])
-def read_recipes(
-    session: Annotated[Session, Depends(get_session)],
+async def read_recipes(
+    session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
 ):
 
-    recipes = session.scalars(select(Recipe).offset(skip).limit(limit)).all()
+    recipes = await session.scalars(select(Recipe)
+                .offset(skip)
+                .limit(limit)).all()
     return recipes
 
 
 @router.get('/{recipe_id}', response_model=RecipePublic)
-def read_recipe(
-    session: Annotated[Session, Depends(get_session)],
+async def read_recipe(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
 ):
-    db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = await session.scalar(
+                            select(Recipe)
+                            .where(Recipe.id == recipe_id)
+                        )
 
     if not db_recipe:
         raise HTTPException(
@@ -60,25 +66,27 @@ def read_recipe(
     status_code=HTTPStatus.CREATED,
     response_model=RecipePublic
 )
-def create_recipe(
-    session: Annotated[Session, Depends(get_session)],
+async def create_recipe(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe: RecipeCreate,
 ):
     db_recipe = Recipe(**recipe.model_dump())
     session.add(db_recipe)
-    session.commit()
-    session.refresh(db_recipe)
+    await session.commit()
+    await session.refresh(db_recipe)
 
     return db_recipe
 
 
 @router.put('/{recipe_id}', response_model=RecipePublic)
-def update_recipe(
-    session: Annotated[Session, Depends(get_session)],
+async def update_recipe(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
     recipe: RecipeUpdate,
 ):
-    db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = await session.scalar(select(Recipe)
+                                    .where(Recipe.id == recipe_id)
+                                )
 
     if not db_recipe:
         raise HTTPException(
@@ -92,8 +100,8 @@ def update_recipe(
             setattr(db_recipe, field, value)
 
         db_recipe.updated_at = datetime.now(timezone.utc)
-        session.commit()
-        session.refresh(db_recipe)
+        await session.commit()
+        await session.refresh(db_recipe)
         return db_recipe
 
     except IntegrityError:
@@ -105,11 +113,13 @@ def update_recipe(
 
 
 @router.delete('/{recipe_id}', status_code=HTTPStatus.OK)
-def delete_recipe(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_recipe(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
 ):
-    db_recipe = session.scalar(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = await session.scalar(select(Recipe)
+                                    .where(Recipe.id == recipe_id)
+                                )
 
     if not db_recipe:
         raise HTTPException(
@@ -117,8 +127,8 @@ def delete_recipe(
             detail='Recipe not found'
         )
 
-    session.delete(db_recipe)
-    session.commit()
+    await session.delete(db_recipe)
+    await session.commit()
 
     return {'message': 'Recipe deleted'}
 
@@ -128,13 +138,13 @@ def delete_recipe(
     status_code=HTTPStatus.CREATED,
     response_model=RecipePublic
 )
-def add_recipe_ingredient(
-    session: Annotated[Session, Depends(get_session)],
+async def add_recipe_ingredient(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
     ingredient: RecipeIngredient,
 ):
 
-    db_recipe = session.scalar(
+    db_recipe = await session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
         .options(selectinload(Recipe.ingredients))
@@ -156,8 +166,8 @@ def add_recipe_ingredient(
 
     session.add(new_ingredient)
     db_recipe.updated_at = datetime.now(timezone.utc)
-    session.commit()
-    session.refresh(db_recipe)
+    await session.commit()
+    await session.refresh(db_recipe)
 
     return RecipePublic.from_orm(db_recipe)
 
@@ -167,13 +177,13 @@ def add_recipe_ingredient(
     status_code=HTTPStatus.CREATED,
     response_model=RecipePublic
 )
-def add_recipe_steps(
-    session: Annotated[Session, Depends(get_session)],
+async def add_recipe_steps(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
     step: RecipeStep,
 ):
 
-    db_recipe = session.scalar(
+    db_recipe = await session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
         .options(
@@ -206,8 +216,8 @@ def add_recipe_steps(
 
     session.add(new_step)
     db_recipe.updated_at = datetime.now(timezone.utc)
-    session.commit()
-    session.refresh(db_recipe)
+    await session.commit()
+    await session.refresh(db_recipe)
 
     return RecipePublic.from_orm(db_recipe)
 
@@ -216,13 +226,13 @@ def add_recipe_steps(
     '/{recipe_id}/image-url',
     response_model=RecipePublic
 )
-def update_recipe_image_url(
-    session: Annotated[Session, Depends(get_session)],
+async def update_recipe_image_url(
+    session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,
     image_url: HttpUrl,
 ):
 
-    db_recipe = session.scalar(
+    db_recipe = await session.scalar(
         select(Recipe)
         .where(Recipe.id == recipe_id)
         .options(
@@ -240,7 +250,7 @@ def update_recipe_image_url(
     db_recipe.image_url = str(image_url)
     db_recipe.updated_at = datetime.now(timezone.utc)
 
-    session.commit()
-    session.refresh(db_recipe)
+    await session.commit()
+    await session.refresh(db_recipe)
 
     return RecipePublic.from_orm(db_recipe)

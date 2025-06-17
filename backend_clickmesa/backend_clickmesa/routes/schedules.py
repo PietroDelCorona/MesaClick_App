@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import Recipe, Schedules, User
@@ -21,16 +21,16 @@ router = APIRouter(
     tags=["schedules"]
 )
 
-Session = Annotated[Session, Depends(get_session)]
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 @router.get('/', response_model=list[SchedulePublic])
-def read_schedules(
-    session: Annotated[Session, Depends(get_session)],
+async def read_schedules(
+    session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
 ):
-    schedules = session.scalars(
+    schedules = await session.scalars(
         select(Schedules)
         .offset(skip)
         .limit(limit)
@@ -40,11 +40,11 @@ def read_schedules(
 
 
 @router.get('/{schedule_id}', response_model=SchedulePublic)
-def read_schedule_by_id(
-    session: Annotated[Session, Depends(get_session)],
+async def read_schedule_by_id(
+    session: Annotated[AsyncSession, Depends(get_session)],
     schedule_id: int,
 ):
-    db_schedule = session.scalar(
+    db_schedule = await session.scalar(
         select(Schedules)
         .where(Schedules.id == schedule_id)
     )
@@ -60,11 +60,11 @@ def read_schedule_by_id(
 
 @router.post('/', status_code=HTTPStatus.CREATED,
             response_model=SchedulePublic)
-def create_schedule(
-    session: Annotated[Session, Depends(get_session)],
+async def create_schedule(
+    session: Annotated[AsyncSession, Depends(get_session)],
     schedule: ScheduleCreate,
 ):
-    db_user = session.scalar(
+    db_user = await session.scalar(
         select(User)
         .where(User.id == schedule.user_id)
     )
@@ -75,7 +75,7 @@ def create_schedule(
             detail='User not found'
         )
 
-    db_recipe = session.scalar(
+    db_recipe = await session.scalar(
         select(Recipe)
         .where(Recipe.id == schedule.recipe_id)
     )
@@ -95,21 +95,21 @@ def create_schedule(
     )
 
     session.add(db_schedule)
-    session.commit()
-    session.refresh(db_schedule)
+    await session.commit()
+    await session.refresh(db_schedule)
 
     return db_schedule
 
 
 @router.put('/{schedule_id}',
             response_model=SchedulePublic)
-def update_schedule(
-    session: Annotated[Session, Depends(get_session)],
+async def update_schedule(
+    session: Annotated[AsyncSession, Depends(get_session)],
     schedule_id: int,
     schedule: ScheduleUpdate,
 ):
 
-    db_schedule = session.scalar(
+    db_schedule = await session.scalar(
         select(Schedules)
         .where(Schedules.id == schedule_id)
     )
@@ -121,7 +121,7 @@ def update_schedule(
         )
 
     if schedule.recipe_id:
-        db_recipe = session.scalar(
+        db_recipe = await session.scalar(
             select(Recipe)
             .where(Recipe.id == schedule.recipe_id)
         )
@@ -142,11 +142,12 @@ def update_schedule(
         if schedule.recipe_id:
             db_schedule.recipe_id = schedule.recipe_id
 
-        session.commit()
-        session.refresh(db_schedule)
-
+        await session.commit()
+        await session.refresh(db_schedule)
         return db_schedule
+
     except IntegrityError:
+        await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail='Invalid data',
@@ -155,11 +156,11 @@ def update_schedule(
 
 @router.delete('/{schedule_id}',
                response_model=Message)
-def delete_schedule(
-    session: Annotated[Session, Depends(get_session)],
+async def delete_schedule(
+    session: Annotated[AsyncSession, Depends(get_session)],
     schedule_id: int,
 ):
-    db_schedule = session.scalar(
+    db_schedule = await session.scalar(
         select(Schedules)
         .where(Schedules.id == schedule_id)
     )
@@ -170,7 +171,7 @@ def delete_schedule(
             detail='Schedule not found'
         )
 
-    session.delete(db_schedule)
-    session.commit()
+    await session.delete(db_schedule)
+    await session.commit()
 
     return {'message': 'Schedule deleted'}
