@@ -37,8 +37,8 @@ async def read_users(
 ):
 
     query = await session.scalars(select(User)
-                    .offset(skip)
-                    .limit(limit)
+        .offset(skip)
+        .limit(limit)
     )
 
     users = query.all()

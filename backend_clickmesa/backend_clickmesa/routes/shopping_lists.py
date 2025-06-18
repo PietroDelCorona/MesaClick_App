@@ -35,11 +35,13 @@ async def read_shopping_lists(
     skip: int = 0,
     limit: int = 100,
 ):
-    shopping_lists = await session.scalars(
+    query = await session.scalars(
         select(ShoppingList)
         .offset(skip)
         .limit(limit)
-    ).all()
+    )
+
+    shopping_lists = query.all()
 
     return shopping_lists
 

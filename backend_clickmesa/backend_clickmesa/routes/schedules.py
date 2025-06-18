@@ -30,11 +30,13 @@ async def read_schedules(
     skip: int = 0,
     limit: int = 100,
 ):
-    schedules = await session.scalars(
+    query = await session.scalars(
         select(Schedules)
         .offset(skip)
         .limit(limit)
-    ).all()
+    )
+
+    schedules = query.all()
 
     return schedules
 

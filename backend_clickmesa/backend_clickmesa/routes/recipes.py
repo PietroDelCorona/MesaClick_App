@@ -36,9 +36,13 @@ async def read_recipes(
     limit: int = 100,
 ):
 
-    recipes = await session.scalars(select(Recipe)
-                .offset(skip)
-                .limit(limit)).all()
+    query = await session.scalars(select(Recipe)
+        .offset(skip)
+        .limit(limit)
+    )
+
+    recipes = query.all()
+
     return recipes
 
 
