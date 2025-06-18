@@ -1,8 +1,19 @@
+frontend_clickmesa/
+backend_clickmesa/
 
-frontend_clickmesa
-
+# Arquivos do Python
 __pycache__/
 *.py[cod]
 *$py.class
-backend_clickmesa/.env
+
+# Variáveis de ambiente
 .env
+.env.local
+
+# Frontend (adicione estas linhas se aplicável)
+node_modules/
+dist/
+*.log
+
+
+
