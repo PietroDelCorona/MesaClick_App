@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import { FaCheck, FaTrash } from "react-icons/fa";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import ShoppingListItem from "@/components/ShoppingListItem";
+import ProtectedPage from '@/components/ProtectedPage';
 
 interface Ingredient {
   name: string;
@@ -123,88 +124,90 @@ export default function ShoppingListPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10">
-        <InsiderHeader />
-      </div>
-
-      <div className="flex pt-4">
-        <div className="hidden lg:block w-64 flex-shrink-0 fixed h-full">
-          <Sidebar />
+    <ProtectedPage>
+      <div className="min-h-screen bg-gray-50">
+        <div className="sticky top-0 z-10">
+          <InsiderHeader />
         </div>
 
-        <main className="flex-1 lg:pl-64 p-4">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Cabeçalho */}
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-start">
-                <div>
-                  <Link href="/dashboard/shopping-list">
-                        <button className="flex items-center text-orange-500 mb-4 cursor-pointer">
-                            <IoMdArrowRoundBack className="mr-1" />
-                            Voltar
-                        </button>
-                    </Link>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    {listData.title}
-                  </h1>
-                  <p className="text-sm text-gray-500">
-                    Criada em: {new Date(listData.createdAt).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <button 
-                    onClick={handleCompleteList}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 whitespace-nowrap text-sm sm:text-base cursor-pointer"
-                    >
-                        <FaCheck /> Finalizar Lista
-                </button>
-              </div>
-            </div>
-
-            {/* Lista de Receitas */}
-            <div className="divide-y divide-gray-200">
-              {listData.recipes.map((recipe) => (
-                <div key={recipe.id} className="p-6">
-                  <h2 className="text-xl font-semibold text-orange-600 mb-4">
-                    {recipe.title}
-                  </h2>
-                  
-                  {/* Ingredientes */}
-                  <ul className="space-y-3">
-                    {recipe.ingredients.map((ingredient, idx) => (
-                      <ShoppingListItem
-                        key={idx}
-                        name={ingredient.name}
-                        quantity={ingredient.quantity}
-                        initialPurchased={ingredient.purchased}
-                        onToggle={(purchased) => handleToggleItem(recipe.id, idx, purchased)}
-                        onDelete={() => handleDeleteItem(recipe.id, idx)}
-                        />
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            {/* Resumo */}
-            <div className="p-6 border-t bg-gray-50">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">Total de itens: {totalItems}</h3>
-                  <p className="text-sm text-gray-500">
-                    {purchasedItems} marcados como comprados
-                  </p>
-                </div>
-                <button 
-                    onClick={handleClearList}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 whitespace-nowrap text-sm sm:text-base cursor-pointer">
-                  <FaTrash /> Limpar Lista
-                </button>
-              </div>
-            </div>
+        <div className="flex pt-4">
+          <div className="hidden lg:block w-64 flex-shrink-0 fixed h-full">
+            <Sidebar />
           </div>
-        </main>
+
+          <main className="flex-1 lg:pl-64 p-4">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Cabeçalho */}
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Link href="/dashboard/shopping-list">
+                          <button className="flex items-center text-orange-500 mb-4 cursor-pointer">
+                              <IoMdArrowRoundBack className="mr-1" />
+                              Voltar
+                          </button>
+                      </Link>
+                    <h1 className="text-2xl font-bold text-gray-800">
+                      {listData.title}
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                      Criada em: {new Date(listData.createdAt).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <button 
+                      onClick={handleCompleteList}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                      >
+                          <FaCheck /> Finalizar Lista
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de Receitas */}
+              <div className="divide-y divide-gray-200">
+                {listData.recipes.map((recipe) => (
+                  <div key={recipe.id} className="p-6">
+                    <h2 className="text-xl font-semibold text-orange-600 mb-4">
+                      {recipe.title}
+                    </h2>
+                    
+                    {/* Ingredientes */}
+                    <ul className="space-y-3">
+                      {recipe.ingredients.map((ingredient, idx) => (
+                        <ShoppingListItem
+                          key={idx}
+                          name={ingredient.name}
+                          quantity={ingredient.quantity}
+                          initialPurchased={ingredient.purchased}
+                          onToggle={(purchased) => handleToggleItem(recipe.id, idx, purchased)}
+                          onDelete={() => handleDeleteItem(recipe.id, idx)}
+                          />
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {/* Resumo */}
+              <div className="p-6 border-t bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-medium">Total de itens: {totalItems}</h3>
+                    <p className="text-sm text-gray-500">
+                      {purchasedItems} marcados como comprados
+                    </p>
+                  </div>
+                  <button 
+                      onClick={handleClearList}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 whitespace-nowrap text-sm sm:text-base cursor-pointer">
+                    <FaTrash /> Limpar Lista
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedPage>
   );
 }

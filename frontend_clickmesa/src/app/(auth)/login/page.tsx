@@ -1,10 +1,66 @@
+"use client";
+
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import Link from "next/link";
 import Header from "@/components/OutsiderHeader";
 import Footer from "@/components/OutsiderFooter";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
+    const router = useRouter();
+
+    const [form, setForm] = useState({
+        email:"",
+        password:"",
+    });
+
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = e.target;
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        const formData = new URLSearchParams();
+        formData.append("username", form.email);
+        formData.append("password", form.password);
+
+        try {
+            const response = await fetch("http://localhost:8000/auth/token", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: formData.toString(),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem("token", data.access_token);
+                router.replace("/dashboard");
+            } else {
+                setError(data.detail || "Credenciais inválidas.");
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Erro de conexão com o servidor.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50"> 
             <Header />
@@ -17,14 +73,16 @@ export default function LoginPage() {
 
                     <div className="mx-auto max-w-md px-4"> 
                         <div className="bg-white p-8 rounded-xl shadow-lg border border-orange-100"> 
-                            <form className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-orange-600">Email:</label>
                                     <input 
                                         id="email" 
                                         name="email" 
                                         type="email" 
-                                        required 
+                                        required
+                                        value={form.email}
+                                        onChange={handleChange} 
                                         className="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm py-2 px-4 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
                                     />
                                 </div>
@@ -35,10 +93,16 @@ export default function LoginPage() {
                                         id="password" 
                                         name="password" 
                                         type="password" 
-                                        required 
+                                        required
+                                        value={form.password}
+                                        onChange={handleChange} 
                                         className="mt-1 block w-full border border-gray-200 rounded-lg shadow-sm py-2 px-4 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
                                     />
                                 </div>
+
+                                {error && (
+                                    <p className="text-red-500 text-sm text-center">{error}</p>
+                                )}
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
@@ -62,9 +126,11 @@ export default function LoginPage() {
 
                                 <button 
                                     type="submit" 
-                                    className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+                                    className={`w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 ${
+                                        loading ? "opacity-50 cursor-not-allowed" : ""
+                                            }`}
                                 >
-                                    Entrar
+                                    {loading ? "Entrando..." : "Entrar"}
                                 </button>
                             </form>
 

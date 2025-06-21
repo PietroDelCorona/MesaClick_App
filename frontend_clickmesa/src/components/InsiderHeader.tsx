@@ -3,9 +3,25 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 export default function InsiderHeader() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+    
+      localStorage.removeItem('token');
+      
+      router.push('/');
+      router.refresh();
+      
+      setIsSidebarOpen(false);
+    } catch (error) {
+      console.error('Erro durante logout:', error);
+    }
+  };
 
   return (
     <>
@@ -25,7 +41,7 @@ export default function InsiderHeader() {
             </Link>
           </div>
 
-          {/* Links principais (visíveis em TODOS os dispositivos) */}
+          {/* Links principais */}
           <div className="flex space-x-2 sm:space-x-4 items-center">
             <Link href="/dashboard" className="text-sm sm:text-base hover:text-orange-500">
               Dashboard
@@ -33,20 +49,22 @@ export default function InsiderHeader() {
             <Link href="/dashboard/recipes" className="text-sm sm:text-base hover:text-orange-500">
               Receitas
             </Link>
-            <Link href="/dashboard/agenda" className="text-sm sm:text-base hover:text-orange-500">Agenda</Link>
+            <Link href="/dashboard/agenda" className="text-sm sm:text-base hover:text-orange-500">
+              Agenda
+            </Link>
 
-            {/* Botão "Sair" (visível apenas em desktop) */}
-            <Link
-              href="/"
-              className="hidden sm:block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+            {/* Botão "Sair" (desktop) */}
+            <button
+              onClick={handleLogout}
+              className="hidden sm:block bg-orange-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-orange-600"
             >
               Sair
-            </Link>
+            </button>
           </div>
         </nav>
       </header>
 
-      {/* Sidebar (mobile) - Opções complementares */}
+      {/* Sidebar (mobile) */}
       <aside
         className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white shadow-sm z-10 overflow-y-auto transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -82,23 +100,22 @@ export default function InsiderHeader() {
               </Link>
             </li>
             <li>
-                <Link 
+              <Link 
                 href="/dashboard/shopping-list"
                 className="block p-2 hover:bg-gray-100 rounded transition"
                 onClick={() => setIsSidebarOpen(false)}
-                >
-                    Listas
-                </Link>
+              >
+                Listas
+              </Link>
             </li>
             {/* Botão "Sair" (mobile) */}
             <li>
-              <Link
-                href="/"
-                className="block p-2 hover:bg-gray-100 rounded transition sm:hidden"
-                onClick={() => setIsSidebarOpen(false)}
+              <button
+                onClick={handleLogout}
+                className="w-full text-left p-2 hover:bg-gray-100 rounded transition"
               >
                 Sair
-              </Link>
+              </button>
             </li>
           </ul>
         </nav>
