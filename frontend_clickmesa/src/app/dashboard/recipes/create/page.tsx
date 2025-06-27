@@ -6,17 +6,20 @@ import ProtectedPage from "@/components/ProtectedPage";
 import { FaPlus, FaTrash, FaClock, FaUtensils, FaListUl } from "react-icons/fa";
 import { BiSolidDish } from "react-icons/bi";
 import { useRecipeForm } from "@/hooks/useRecipeForm";
-
-
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const {
-    ingredients,
     formData,
+    ingredients,
+    steps,
     addIngredient,
     removeIngredient,
-    handleIngredientChange,
     handleChange,
+    handleIngredientChange,
+    addStep,
+    setSteps,
+    handleStepChange,
     handleSubmit
   } = useRecipeForm();
 
@@ -47,69 +50,13 @@ export default function Page() {
                     </label>
                     <input
                       type="text"
-                      name="name"
-                      value={formData.name}
+                      name="title"
+                      value={formData.title}
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Ex: Bolo de Chocolate"
                     />
-                  </div>
-
-                  {/* Categoria */}
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Categoria *
-                    </label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="">Selecione uma categoria</option>
-                      <option value="Sobremesa">Sobremesa</option>
-                      <option value="Prato Principal">Prato Principal</option>
-                      <option value="Acompanhamento">Acompanhamento</option>
-                      <option value="Lanche">Lanche</option>
-                      <option value="Bebida">Bebida</option>
-                    </select>
-                  </div>
-
-                  {/* Porções e Tempo de Preparo */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
-                        <BiSolidDish /> Porções *
-                      </label>
-                      <input
-                        type="number"
-                        name="portions"
-                        value={formData.portions}
-                        onChange={handleChange}
-                        required
-                        min="1"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Quantas porções rende"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
-                        <FaClock /> Tempo de Preparo (min) *
-                      </label>
-                      <input
-                        type="number"
-                        name="prepTime"
-                        value={formData.prepTime}
-                        onChange={handleChange}
-                        required
-                        min="1"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Tempo em minutos"
-                      />
-                    </div>
                   </div>
 
                   {/* Descrição */}
@@ -124,8 +71,79 @@ export default function Page() {
                       required
                       rows={4}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Descreva a receita, modo de preparo, etc..."
+                      placeholder="Descreva a receita..."
                     ></textarea>
+                  </div>
+
+                  {/* Categoria */}
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Categoria *
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="main">Prato Principal</option>
+                      <option value="dessert">Sobremesa</option>
+                      <option value="side">Acompanhamento</option>
+                      <option value="snack">Lanche</option>
+                      <option value="drink">Bebida</option>
+                    </select>
+                  </div>
+
+                  {/* Porções e Tempo de Preparo */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
+                        <BiSolidDish /> Porções *
+                      </label>
+                      <input
+                        type="number"
+                        name="servings"
+                        value={formData.servings}
+                        onChange={handleChange}
+                        required
+                        min="1"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Ex: 4"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
+                        <FaClock /> Tempo de Preparo (min) *
+                      </label>
+                      <input
+                        type="number"
+                        name="prep_time_minutes"
+                        value={formData.prep_time_minutes}
+                        onChange={handleChange}
+                        required
+                        min="1"
+                        className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Ex: 30"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tempo de Cozimento (opcional) */}
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Tempo de Cozimento (min)
+                    </label>
+                    <input
+                      type="number"
+                      name="cook_time_minutes"
+                      value={formData.cook_time_minutes}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Ex: 30"
+                    />
                   </div>
 
                   {/* Ingredientes */}
@@ -134,21 +152,37 @@ export default function Page() {
                       <FaListUl /> Ingredientes *
                     </label>
                     <div className="space-y-3">
-                      {ingredients.map((ingredient) => (
-                        <div key={ingredient.id} className="flex items-center gap-2">
+                      {ingredients.map((ingredient, index) => (
+                        <div key={index} className="grid grid-cols-12 gap-2">
                           <input
                             type="text"
-                            value={ingredient.value}
-                            onChange={(e) => handleIngredientChange(ingredient.id, e.target.value)}
+                            value={ingredient.name}
+                            onChange={(e) => handleIngredientChange(index, 'name', e.target.value)}
+                            placeholder="Nome do ingrediente"
+                            className="col-span-6 px-3 py-2 border border-gray-300 rounded-lg"
                             required
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                            placeholder="Ex: 1 xícara de farinha de trigo"
+                          />
+                          <input
+                            type="number"
+                            value={ingredient.quantity}
+                            onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
+                            placeholder="Qtd"
+                            className="col-span-2 px-3 py-2 border border-gray-300 rounded-lg"
+                            min="0"
+                            step="0.1"
+                          />
+                          <input
+                            type="text"
+                            value={ingredient.unit}
+                            onChange={(e) => handleIngredientChange(index, 'unit', e.target.value)}
+                            placeholder="Unidade"
+                            className="col-span-3 px-3 py-2 border border-gray-300 rounded-lg"
                           />
                           {ingredients.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => removeIngredient(ingredient.id)}
-                              className="p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-red-50"
+                              onClick={() => removeIngredient(index)}
+                              className="col-span-1 p-2 text-red-500 hover:text-red-700 cursor-pointer"
                             >
                               <FaTrash />
                             </button>
@@ -158,9 +192,49 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={addIngredient}
-                        className="mt-2 flex items-center gap-1 text-orange-500 hover:text-orange-700 font-medium"
+                        className="mt-2 flex items-center gap-2 text-orange-500 hover:text-orange-700 cursor-pointer"
                       >
-                        <FaPlus /> Adicionar outro ingrediente
+                        <FaPlus /> Adicionar ingrediente
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Modo de Preparo */}
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Modo de Preparo *
+                    </label>
+                    <div className="space-y-3">
+                      {steps.map((step, index) => (
+                        <div key={index} className="flex gap-2">
+                          <span className="font-medium mt-2">{step.step_number}.</span>
+                          <textarea
+                            value={step.instruction}
+                            onChange={(e) => handleStepChange(index, e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                            rows={2}
+                            required
+                          />
+                          {steps.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSteps = steps.filter((_, i) => i !==index);
+                                setSteps(newSteps.map((step, i) => ({ ...step, step_number: i + 1 })));
+                              }}
+                              className="p-2 text-red-500 hover:text-red-700 cursor-pointer"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addStep}
+                        className="mt-2 flex items-center gap-2 text-orange-500 hover:text-orange-700 cursor-pointer"
+                      >
+                        <FaPlus /> Adicionar passo
                       </button>
                     </div>
                   </div>
@@ -169,9 +243,9 @@ export default function Page() {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <FaPlus /> Adicionar Receita
+                      <FaPlus /> Criar Receita
                     </button>
                   </div>
                 </form>

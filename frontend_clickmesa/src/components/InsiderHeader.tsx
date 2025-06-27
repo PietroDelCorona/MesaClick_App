@@ -12,9 +12,11 @@ export default function InsiderHeader() {
   const handleLogout = async () => {
     try {
     
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("username");
       
-      router.push('/');
+      router.push("/landing");
       router.refresh();
       
       setIsSidebarOpen(false);
@@ -36,7 +38,7 @@ export default function InsiderHeader() {
             >
               {isSidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
-            <Link href="/" className="text-lg sm:text-xl font-bold text-orange-500">
+            <Link href="/dashboard" className="text-lg sm:text-xl font-bold text-orange-500">
               Click Mesa
             </Link>
           </div>

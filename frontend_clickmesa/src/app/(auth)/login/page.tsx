@@ -8,6 +8,14 @@ import Footer from "@/components/OutsiderFooter";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+interface LoginResponse {
+    access_token: string;
+    token_type: string;
+    user_id: number;
+    username: string;
+    detail?: string;
+}
+
 export default function LoginPage() {
     const router = useRouter();
 
@@ -32,9 +40,9 @@ export default function LoginPage() {
         setError("");
         setLoading(true);
 
-        const formData = new URLSearchParams();
-        formData.append("username", form.email);
-        formData.append("password", form.password);
+        //const formData = new URLSearchParams();
+        //formData.append("username", form.email);
+        //formData.append("password", form.password);
 
         try {
             const response = await fetch("http://localhost:8000/auth/token", {
@@ -42,20 +50,37 @@ export default function LoginPage() {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
-                body: formData.toString(),
+                body: new URLSearchParams({
+                    username: form.email,
+                    password: form.password
+                }),
             });
 
-            const data = await response.json();
+            const data: LoginResponse = await response.json();
+            console.log("Resposta completa da API:", data);
 
             if (response.ok) {
+                if (!data.access_token || !data.user_id || !data.username) {
+                    throw new Error("Dados incompletos na resposta da API");
+                }
+
                 localStorage.setItem("token", data.access_token);
+                localStorage.setItem("user_id", data.user_id.toString())
+                localStorage.setItem("username", data.username);
+
+                console.log("Dados Armazenados:", {
+                    token: localStorage.getItem("token"),
+                    user_id: localStorage.getItem("user"),
+                    username: localStorage.getItem("username")
+                });
+                
                 router.replace("/dashboard");
             } else {
                 setError(data.detail || "Credenciais inválidas.");
             }
         } catch (err) {
-            console.error(err);
-            setError("Erro de conexão com o servidor.");
+            console.error("Erro no login:", err);
+            setError(err instanceof Error ? err.message : "Erro desconhecido");
         } finally {
             setLoading(false);
         }

@@ -1,14 +1,14 @@
 
-from datetime import date
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
 
 
 class ScheduleBase(BaseModel):
-    schedule_date: date
-    meal_type: str
-    portions: int = 1
+    scheduled_date: datetime
+    meal_type: Optional[str] = None
+    portions: Optional[int] = None
     recipe_id: int
 
 
@@ -17,7 +17,7 @@ class ScheduleCreate(ScheduleBase):
 
 
 class ScheduleUpdate(BaseModel):
-    scheduled_date: Optional[date] = None
+    scheduled_date: Optional[datetime] = None
     meal_type: Optional[str] = None
     portions: Optional[int] = None
     recipe_id: Optional[int] = None

@@ -9,21 +9,34 @@ export default function useAuthGuard() {
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const verifyAuth = () => {
+      const token = localStorage.getItem("token");
+      const user_id = localStorage.getItem("user_id");
+      const username = localStorage.getItem("username")
 
-    if (!token) {
-      setUnauthorized(true);
-      setIsChecking(false);
+      console.log("Verificando autenticação:", { token, user_id, username });
 
-      // ⏳ Aguarda 3 segundos ANTES de redirecionar
-      const timeout = setTimeout(() => {
-        router.replace("/");
-      }, 6000);
+      if (!token || !user_id || !username) {
+        setUnauthorized(true);
+        // Limpa os dados inválidos se existirem parcialmente
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("username")
+        return false;
+      }
+      return true;
+    };
 
-      return () => clearTimeout(timeout); // limpa o timeout se desmontar
-    }
-
+    const isValid = verifyAuth();
     setIsChecking(false);
+
+    if (!isValid) {
+      const timeout = setTimeout(() => {
+        router.replace("/login");
+      }, 10000);
+      
+      return () => clearTimeout(timeout);
+    }
   }, [router]);
 
   return { isChecking, unauthorized };

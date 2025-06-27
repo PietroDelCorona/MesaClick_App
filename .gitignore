@@ -1,5 +1,4 @@
-frontend_clickmesa/
-backend_clickmesa/
+frontend-BACKUP/
 
 # Arquivos do Python
 __pycache__/
@@ -11,7 +10,7 @@ __pycache__/
 .env.local
 
 # Frontend (adicione estas linhas se aplicável)
-node_modules/
+frontend_clickmesa/node_modules/
 dist/
 *.log
 

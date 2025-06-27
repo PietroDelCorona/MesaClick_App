@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
@@ -8,8 +9,16 @@ import { FaSearch, FaShoppingCart, FaTrash } from "react-icons/fa";
 import { FaBowlFood } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
 import { useCart } from "@/hooks/useCart";
+import { getRecipes } from "@/services/recipeService";
+import useUser from "@/hooks/useUser";
+import { Recipe } from "@/types/recipe";
 
 export default function Page() {
+  const { user } = useUser();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
   // Usando todas as funções do Zustand
   const {
     items: cartItems,
@@ -22,6 +31,32 @@ export default function Page() {
     openCart,
     closeCart,
   } = useCart();
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        setIsLoading(true);
+        const data = await getRecipes(token);
+        setRecipes(data);
+      } catch (error) {
+        console.error("Erro ao buscar receitas:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, []);
+
+  const filteredRecipes = recipes.filter(recipe =>
+    recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.ingredients.some(ingredient =>
+      ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <ProtectedPage>
@@ -47,64 +82,70 @@ export default function Page() {
                 type="text"
                 placeholder="Busque por nome ou ingrediente..."
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
             {/* Lista de receitas */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-              {[
-                {
-                  id: "1",
-                  icon: <FaBowlFood className="mx-auto text-4xl text-orange-500" />,
-                  title: "Prato X",
-                  prep_time: "Tempo de Preparo: x min",
-                  description: "Descrição da Receita",
-                },
-                {
-                  id: "2",
-                  icon: <FaBowlFood className="mx-auto text-4xl text-orange-500" />,
-                  title: "Prato Y",
-                  prep_time: "Tempo de Preparo: x min",
-                  description: "Descrição da Receita",
-                },
-                {
-                  id: "3",
-                  icon: <FaBowlFood className="mx-auto text-4xl text-orange-500" />,
-                  title: "Prato Z",
-                  prep_time: "Tempo de Preparo: x min",
-                  description: "Descrição da Receita",
-                },
-              ].map((feature) => (
-                <div
-                  key={feature.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow min-w-0"
-                >
-                  <div className="flex flex-col items-center h-full">
-                    {feature.icon}
-                    <h3 className="font-semibold text-center mt-3 text-base md:text-lg whitespace-normal break-words">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">{feature.prep_time}</p>
-                    <p className="text-sm text-gray-700 mt-2 text-center">
-                      {feature.description}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-                      <Link href="#">
-                        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm">
-                          Ver Detalhes                        
+            {isLoading ? (
+              <div className="flex justify-center mt-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                {filteredRecipes.map((recipe) => (
+                  <div
+                    key={recipe.id}
+                    className="p-4 border rounded-lg hover:shadow-md transition-shadow min-w-0"
+                  >
+                    <div className="flex flex-col items-center h-full">
+                      <FaBowlFood className="mx-auto text-4xl text-orange-500" />
+                      <h3 className="font-semibold text-center mt-3 text-base md:text-lg whitespace-normal break-words">
+                        {recipe.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Tempo de Preparo: {recipe.prep_time_minutes} min
+                      </p>
+                      <p className="text-sm text-gray-700 mt-2 text-center line-clamp-2">
+                        {recipe.description}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
+                        <Link href={`/dashboard/recipes/${recipe.id}`}>
+                          <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer">
+                            Ver Detalhes
+                          </button>
+                        </Link>
+                        <button
+                          onClick={() => addItem({ 
+                            id: recipe.id.toString(), 
+                            title: recipe.title,
+                            quantity: 1 
+                          })}
+                          className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer"
+                        >
+                          Adicionar à Lista
                         </button>
-                      </Link>
-                      <button
-                        onClick={() => addItem({ id: feature.id, title: feature.title })}
-                        className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm"
-                      >
-                        Adicionar à Lista
-                      </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
+            {!isLoading && filteredRecipes.length === 0 && (
+              <div className="text-center mt-8">
+                <p className="text-gray-500">Nenhuma receita encontrada</p>
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm("")}
+                    className="text-orange-500 mt-2"
+                  >
+                    Limpar busca
+                  </button>
+                )}
+              </div>
+            )}
           </main>
         </div>
 
@@ -170,7 +211,7 @@ export default function Page() {
                             </button>
                             <button
                               onClick={() => removeItem(item.id)}
-                              className="text-red-500 hover:text-red-700 ml-2"
+                              className="text-red-500 hover:text-red-700 ml-2 cursor-pointer"
                             >
                               <FaTrash size={14} />
                             </button>

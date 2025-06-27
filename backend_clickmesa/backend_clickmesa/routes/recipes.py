@@ -1,7 +1,7 @@
 
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import HttpUrl
@@ -29,21 +29,28 @@ router = APIRouter(
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
-@router.get('/', response_model=List[RecipeCard])
+@router.get('/', response_model=List[RecipePublic])
 async def read_recipes(
     session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 100,
+    category: Optional[str] = None
 ):
-
-    query = await session.scalars(select(Recipe)
+    query = (
+        select(Recipe)
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.steps)
+        )
         .offset(skip)
         .limit(limit)
     )
 
-    recipes = query.all()
+    if category:
+        query = query.where(Recipe.category == category)
 
-    return recipes
+    recipes = (await session.scalars(query)).all()
+    return [RecipePublic.model_validate(recipe, from_attributes=True) for recipe in recipes]
 
 
 @router.get('/{recipe_id}', response_model=RecipePublic)
@@ -53,6 +60,10 @@ async def read_recipe(
 ):
     db_recipe = await session.scalar(
                             select(Recipe)
+                            .options(
+                                selectinload(Recipe.ingredients),
+                                selectinload(Recipe.steps)
+                            )
                             .where(Recipe.id == recipe_id)
                         )
 
@@ -65,22 +76,32 @@ async def read_recipe(
     return db_recipe
 
 
-@router.post(
-    '/',
-    status_code=HTTPStatus.CREATED,
-    response_model=RecipePublic
-)
+@router.post('/')
 async def create_recipe(
-    session: Annotated[AsyncSession, Depends(get_session)],
-    recipe: RecipeCreate,
+    recipe_data: RecipeCreate,
+    session: AsyncSession = Depends(get_session),
 ):
-    db_recipe = Recipe(**recipe.model_dump())
-    session.add(db_recipe)
-    await session.commit()
-    await session.refresh(db_recipe)
-
-    return db_recipe
-
+    try:
+        # Extrai os dados
+        recipe_dict = recipe_data.model_dump()
+        ingredients_data = recipe_dict.pop('ingredients')
+        steps_data = recipe_dict.pop('steps')
+        
+        # Cria a receita básica
+        db_recipe = Recipe(**recipe_dict)
+        session.add(db_recipe)
+        await session.flush()  # Obtém o ID
+        
+        # Adiciona relacionamentos de forma assíncrona
+        await db_recipe.add_relations(session, ingredients_data, steps_data)
+        
+        await session.commit()
+        await session.refresh(db_recipe)
+        return db_recipe
+        
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(422, detail=str(e))
 
 @router.put('/{recipe_id}', response_model=RecipePublic)
 async def update_recipe(

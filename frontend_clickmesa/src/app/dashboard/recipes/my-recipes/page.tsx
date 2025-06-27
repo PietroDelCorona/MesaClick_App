@@ -1,95 +1,252 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
+import Link from "next/link";
+import { FaSearch, FaShoppingCart, FaTrash, FaPlus } from "react-icons/fa";
 import { FaBowlFood } from "react-icons/fa6";
-import { FaSearch } from "react-icons/fa";
+import { FiX } from "react-icons/fi";
+import { useCart } from "@/hooks/useCart";
+import { getRecipes } from "@/services/recipeService";
+import useUser from "@/hooks/useUser";
+import { Recipe } from "@/types/recipe";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-    return (
-        <ProtectedPage>
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="sticky top-0 z-10">
-                    <InsiderHeader />
-                </div>
+  const { user } = useUser();
+  const router = useRouter();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-                <div className="flex pt-4">
-                    {/* Sidebar - visível apenas em desktop */}
-                    <div className="hidden sm:block w-64 flex-shrink-0">
-                        <Sidebar />
+  const {
+    items: cartItems,
+    isCartOpen,
+    totalItems,
+    addItem,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    openCart,
+    closeCart,
+  } = useCart();
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      const token = localStorage.getItem("token");
+      if (!token || !user) return;
+
+      try {
+        setIsLoading(true);
+        const data = await getRecipes(token);
+        // Filtrar receitas do usuário logado
+        const userRecipes = data.filter(recipe => recipe.user_id === user.id);
+        setRecipes(userRecipes);
+      } catch (error) {
+        console.error("Erro ao buscar receitas:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, [user]);
+
+  const filteredRecipes = recipes.filter(recipe =>
+    recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.ingredients.some(ingredient =>
+      ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  return (
+    <ProtectedPage>
+      <div className="min-h-screen">
+        <InsiderHeader />
+
+        <div className="flex pt-4">
+          <div className="hidden sm:block">
+            <Sidebar />
+          </div>
+
+          <main className="flex-1 p-4 sm:ml-64">
+            <div className="space-y-4">
+              <h1 className="text-4xl text-orange-600 text-center mt-2">Minhas Receitas</h1>
+            </div>
+
+            {/* Barra de busca */}
+            <div className="relative max-w-xl mx-auto mt-6">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch />
+              </div>
+              <input
+                type="text"
+                placeholder="Busque por nome ou ingrediente..."
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Lista de receitas */}
+            {isLoading ? (
+              <div className="flex justify-center mt-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+              </div>
+            ) : filteredRecipes.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                {filteredRecipes.map((recipe) => (
+                  <div
+                    key={recipe.id}
+                    className="p-4 border rounded-lg hover:shadow-md transition-shadow min-w-0"
+                  >
+                    <div className="flex flex-col items-center h-full">
+                      <FaBowlFood className="mx-auto text-4xl text-orange-500" />
+                      <h3 className="font-semibold text-center mt-3 text-base md:text-lg whitespace-normal break-words">
+                        {recipe.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Tempo: {recipe.prep_time_minutes} min
+                      </p>
+                      <p className="text-sm text-gray-700 mt-2 text-center line-clamp-2">
+                        {recipe.description}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
+                        <Link href={`/dashboard/recipes/${recipe.id}`}>
+                          <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer">
+                            Ver Detalhes
+                          </button>
+                        </Link>
+                        <button
+                          onClick={() => addItem({ 
+                            id: recipe.id.toString(), 
+                            title: recipe.title,
+                            quantity: 1 
+                          })}
+                          className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer"
+                        >
+                          Adicionar à Lista
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center mt-12">
+                <FaBowlFood className="mx-auto text-5xl text-gray-300 mb-4" />
+                <h3 className="text-xl font-medium text-gray-500">
+                  {searchTerm ? "Nenhuma receita encontrada" : "Você ainda não criou receitas"}
+                </h3>
+                <p className="text-gray-400 mb-6">
+                  {searchTerm ? "Tente outra busca" : "Comece adicionando sua primeira receita"}
+                </p>
+                <Link href={'/dashboard/recipes/create'}>
+                    <button
+                    //onClick={() => router.push("/dashboard/recipes/create")}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg inline-flex items-center gap-2 cursor-pointer"
+                    >
+                    <FaPlus /> Criar Receita
+                    </button>
+                </Link>
+              </div>
+            )}
+          </main>
+        </div>
+
+        {/* Botão do carrinho (flutuante) */}
+        <button
+          onClick={openCart}
+          className="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 z-30"
+        >
+          <FaShoppingCart className="text-xl" />
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {totalItems}
+            </span>
+          )}
+        </button>
+
+        {/* Sidebar do carrinho */}
+        {isCartOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={closeCart} />
+            <div className="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-lg z-50 overflow-y-auto">
+              <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
+                <h2 className="text-xl text-orange-500 font-bold">Minha Lista</h2>
+                <button
+                  onClick={closeCart}
+                  className="text-black font-bold hover:text-orange-500"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              <div className="p-4">
+                {cartItems.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    Sua lista está vazia
+                  </p>
+                ) : (
+                  <>
+                    <ul className="space-y-3">
+                      {cartItems.map((item) => (
+                        <li
+                          key={item.id}
+                          className="flex justify-between items-center pb-2 border-b"
+                        >
+                          <span className="truncate flex-1">{item.title}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, "decrease")}
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                            >
+                              -
+                            </button>
+                            <span className="w-6 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, "increase")}
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                            >
+                              +
+                            </button>
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              className="text-red-500 hover:text-red-700 ml-2 cursor-pointer"
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="mb-4 p-2 bg-orange-50 rounded-lg">
+                      <p className="font-semibold text-orange-600">
+                        Total de Receitas Selecionadas: {totalItems}
+                      </p>
                     </div>
 
-                    {/* Conteúdo Principal */}
-                    <main className="flex-1 p-4 sm:ml-0 lg:ml-64">
-                        <div className="max-w-7xl mx-auto">
-                            {/* Título */}
-                            <h1 className="text-2xl sm:text-4xl text-orange-600 text-center mt-2 mb-6">
-                                Minhas Receitas
-                            </h1>
-
-                            {/* Barra de Busca */}
-                            <div className="relative max-w-xl mx-auto px-4 sm:px-0">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaSearch className="text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Busque por nome ou ingrediente..."
-                                    className="block w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                                />
-                            </div>
-
-                            {/* Grid de Receitas */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8 px-4 sm:px-0">
-                                {[
-                                    { 
-                                        icon: <FaBowlFood className="mx-auto text-4xl text-orange-500"/>, 
-                                        title: "Prato X", 
-                                        prep_time: "Tempo: 30 min", 
-                                        description: "Descrição breve da receita e seus principais ingredientes"
-                                    },
-                                    { 
-                                        icon: <FaBowlFood className="mx-auto text-4xl text-orange-500"/>, 
-                                        title: "Prato Y", 
-                                        prep_time: "Tempo: 45 min", 
-                                        description: "Descrição breve da receita e seus principais ingredientes"
-                                    },
-                                    { 
-                                        icon: <FaBowlFood className="mx-auto text-4xl text-orange-500"/>, 
-                                        title: "Prato Z", 
-                                        prep_time: "Tempo: 60 min", 
-                                        description: "Descrição breve da receita e seus principais ingredientes"
-                                    }
-                                ].map((feature, index) => (
-                                    <div 
-                                        key={index} 
-                                        className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
-                                    >
-                                        <div className="flex flex-col items-center h-full">
-                                            {feature.icon}
-                                            <h3 className="font-semibold text-center mt-3 text-base md:text-lg whitespace-normal break-words">
-                                                {feature.title}
-                                            </h3>
-                                            <p className="text-sm text-gray-600 mt-1">{feature.prep_time}</p>
-                                            <p className="text-sm text-gray-700 mt-2 text-center line-clamp-2">
-                                                {feature.description}
-                                            </p>
-                                            <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-                                                <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors text-sm w-full">
-                                                    Ver Detalhes
-                                                </button>
-                                                <button className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full">
-                                                    Adicionar à Lista
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </main>
-                </div>
+                    <div className="mt-4 space-y-3 sticky bottom-0 bg-white pt-3 border-t">
+                      <button
+                        onClick={clearCart}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors"
+                      >
+                        Limpar Lista
+                      </button>
+                      <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors">
+                        Criar Lista de Compra
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-        </ProtectedPage>
-    );
+          </>
+        )}
+      </div>
+    </ProtectedPage>
+  );
 }

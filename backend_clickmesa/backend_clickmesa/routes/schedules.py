@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import Recipe, Schedules, User
@@ -32,13 +33,17 @@ async def read_schedules(
 ):
     query = await session.scalars(
         select(Schedules)
+        .options(
+            selectinload(Schedules.recipe),
+            selectinload(Schedules.user)
+        )
         .offset(skip)
         .limit(limit)
     )
 
     schedules = query.all()
 
-    return schedules
+    return [SchedulePublic.model_validate(s, from_attributes=True) for s in schedules]
 
 
 @router.get('/{schedule_id}', response_model=SchedulePublic)
@@ -66,6 +71,7 @@ async def create_schedule(
     session: Annotated[AsyncSession, Depends(get_session)],
     schedule: ScheduleCreate,
 ):
+    print(schedule)
     db_user = await session.scalar(
         select(User)
         .where(User.id == schedule.user_id)
@@ -89,7 +95,7 @@ async def create_schedule(
         )
 
     db_schedule = Schedules(
-        scheduled_date=schedule.schedule_date,
+        scheduled_date=schedule.scheduled_date,
         meal_type=schedule.meal_type,
         portions=schedule.portions,
         user_id=schedule.user_id,

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend_clickmesa.database import get_session
 from backend_clickmesa.models import User
 from backend_clickmesa.schemas.auth import Token
+from backend_clickmesa.schemas.user import UserPublic
 from backend_clickmesa.security import (
     create_access_token,
     get_current_user,
@@ -48,7 +49,11 @@ async def login_for_access_token(
 
     access_token = create_access_token(data={"sub": user.email})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token,
+            "token_type": "bearer",
+            "user_id": user.id,
+            "username": user.username
+    }
 
 
 @router.post('/refresh_token')
@@ -58,3 +63,10 @@ async def refresh_access_token(
     new_access_token = create_access_token(data={'sub': user.email})
 
     return {'access_token': new_access_token, 'token_type': 'bearer'}
+
+
+@router.get('/me', response_model=UserPublic)
+async def get_current_user_info(
+    current_user: CurrentUser
+):
+    return current_user

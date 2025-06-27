@@ -1,7 +1,7 @@
 from datetime import date, datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import Date, ForeignKey, Integer, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
 
 table_registry = registry()
@@ -20,17 +20,20 @@ class User:
     password: Mapped[str] = mapped_column(String(255))
     email: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
 
     recipes: Mapped[List["Recipe"]] = relationship(
         back_populates="owner",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        default_factory=list
     )
     shopping_lists: Mapped[List["ShoppingList"]] = relationship(
         back_populates="owner",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        default_factory=list
     )
     scheduled_meals: Mapped[List["Schedules"]] = relationship(
         back_populates="user",
@@ -52,33 +55,59 @@ class Recipe:
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     prep_time_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
     cook_time_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    category: Mapped[Optional[str]] = mapped_column(String(50),
+                                        nullable=True)
     servings: Mapped[Optional[int]] = mapped_column(nullable=True)
     image_url: Mapped[Optional[str]] = mapped_column(String(255),
                                         nullable=True)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-    owner: Mapped["User"] = relationship(back_populates="recipes")
+    owner: Mapped["User"] = relationship(back_populates="recipes", init=False)
     ingredients: Mapped[List["RecipeIngredient"]] = relationship(
         back_populates="recipe",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        init=False
     )
     steps: Mapped[List["RecipeStep"]] = relationship(
         back_populates="recipe",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        init=False
     )
     scheduled_meals: Mapped[List["Schedules"]] = relationship(
         back_populates="recipe",
         cascade="all, delete-orphan",
         init=False
     )
+
+    async def add_relations(self, session, ingredients_data, steps_data):
+        """Método assíncrono para adicionar relacionamentos"""
+        # Para ingredientes
+        self.ingredients = []
+        for ing in ingredients_data:
+            ingredient = RecipeIngredient(**ing)
+            ingredient.recipe_id = self.id
+            self.ingredients.append(ingredient)
+            session.add(ingredient)
+        
+        # Para passos
+        self.steps = []
+        for step in steps_data:
+            step_obj = RecipeStep(**step)
+            step_obj.recipe_id = self.id
+            self.steps.append(step_obj)
+            session.add(step_obj)
+        
+        await session.flush()
 
 
 @table_registry.mapped_as_dataclass
@@ -93,10 +122,10 @@ class RecipeIngredient:
     name: Mapped[str] = mapped_column(String(100))
     quantity: Mapped[float]
     unit: Mapped[str] = mapped_column(String(20))
-    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, init=False)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), init=False)
 
-    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients", init=False)
 
 
 @table_registry.mapped_as_dataclass
@@ -110,10 +139,9 @@ class RecipeStep:
     )
     step_number: Mapped[int]
     instruction: Mapped[str] = mapped_column(Text)
-    duration_minutes: Mapped[Optional[int]] = mapped_column(nullable=True)
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), init=False)
 
-    recipe: Mapped["Recipe"] = relationship(back_populates="steps")
+    recipe: Mapped["Recipe"] = relationship(back_populates="steps", init=False)
 
 
 @table_registry.mapped_as_dataclass
@@ -127,10 +155,17 @@ class ShoppingList:
     )
     name: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    supermarket_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("supermarkets.id"), nullable=True
+    )
+    supermarket: Mapped[Optional["Supermarkets"]] = relationship(
+        back_populates="shopping_lists"
+    )
 
     owner: Mapped["User"] = relationship(back_populates="shopping_lists")
     items: Mapped[List["ShoppingListItem"]] = relationship(
@@ -186,6 +221,7 @@ class Supermarkets:
     )
 
     updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         onupdate=datetime.now(timezone.utc),
         init=False
     )
@@ -196,6 +232,7 @@ class Supermarkets:
 
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
@@ -210,7 +247,7 @@ class Schedules:
         autoincrement=True,
         init=False
     )
-    scheduled_date: Mapped[date] = mapped_column(Date)
+    scheduled_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     meal_type: Mapped[str] = mapped_column(String(20))
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
@@ -231,10 +268,12 @@ class Schedules:
         default=1
     )
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         default=None,
         onupdate=datetime.now(timezone.utc),
         init=False
