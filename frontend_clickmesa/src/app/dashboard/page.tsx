@@ -6,9 +6,12 @@ import Sidebar from "../../components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
 import useUser from "@/hooks/useUser";
 import { getSchedules } from "@/services/scheduleService";
-import { format, parseISO } from 'date-fns';
+import { isToday, isTomorrow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getRecipeById } from '@/services/recipeListService';
+import { getMyRecipes } from '@/services/recipeService';
+import { getMyShoppingLists } from '@/services/shoppingListService';
+import { useRouter } from 'next/navigation';
 
 interface ScheduledMeal {
   id: number;
@@ -25,6 +28,8 @@ export default function Page() {
   const [totalRecipes, setTotalRecipes] = useState(0);
   const [totalShoppingLists, setTotalShoppingLists] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const router = useRouter();
   
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -33,7 +38,9 @@ export default function Page() {
 
       try {
         setIsLoading(true);
+        const myRecipes = await getMyRecipes(token);
         const schedules = await getSchedules(token);
+        const shoppingLists = await getMyShoppingLists(token);
                 
         // Filtra refeições dos próximos 7 dias
         const today = new Date();
@@ -50,11 +57,19 @@ export default function Page() {
         const mealsWithTitles = await Promise.all(
             upcoming.map(async meal => {
                 try {
-                    const recipe = await getRecipeById(meal.recipe_id, token);
+                  if(!meal.recipe_id) {
+                    return {
+                      ...meal,
+                      recipe_title:"Sem receita associada"
+                    };
+                  }
+
+                  const recipe = await getRecipeById(token, meal.recipe_id);
                     return {
                         ...meal,
                         recipe_title: recipe.title
                     };
+                    
                 } catch (error) {
                     console.error(`Erro ao buscar receita ${meal.recipe_id}:`, error);
                     return {
@@ -66,8 +81,8 @@ export default function Page() {
         );
 
         setUpcomingMeals(mealsWithTitles);
-        setTotalRecipes(12); // Substitua por chamada real à API
-        setTotalShoppingLists(2); // Substitua por chamada real à API
+        setTotalRecipes(myRecipes.length);
+        setTotalShoppingLists(shoppingLists.length); 
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -78,27 +93,27 @@ export default function Page() {
     fetchDashboardData();
   }, []);
 
+  const capitalizeFirstLetter = (str: string) =>
+          str.charAt(0).toUpperCase() + str.slice(1);
+  
   const formatMealTime = (dateString: string) => {
     try {
-        // Garante que a data está no formato ISO (adiciona 'Z' se não tiver timezone)
-        const isoDate = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
-        const date = parseISO(isoDate);
-        
-        return format(date, "EEEE, dd/MM 'às' HH:mm", { locale: ptBR });
-    } catch (error) {
-        console.error("Erro ao formatar data:", dateString, error);
-        return "Data inválida";
-    }
-  };
+      // Sempre cria o objeto Date direto da string recebida
+      const date = new Date(dateString);
 
-  const getMealTypeName = (type: string) => {
-    const types: Record<string, string> = {
-      breakfast: "Café da Manhã",
-      lunch: "Almoço",
-      dinner: "Jantar",
-      snack: "Lanche"
-    };
-    return types[type] || type;
+      if(isToday(date)) {
+        return `Hoje às ${format(date, "HH:mm")}`;
+      } else if(isTomorrow(date)) {
+        return `Amanhã ${format(date, "dd/MM")} às ${format(date, "HH:mm")}`;
+      }
+
+      // Formata no padrão desejado
+      const formatted = format(date, "EEEE, dd/MM 'às' HH:mm", { locale: ptBR });
+      return capitalizeFirstLetter(formatted);
+    } catch (error) {
+      console.error("Erro ao formatar data:", dateString, error);
+      return "Data inválida";
+    }
   };
 
   return (
@@ -170,7 +185,10 @@ export default function Page() {
                             {formatMealTime(meal.scheduled_date)}
                           </span>
                         </div>
-                        <button className="text-orange-500 hover:text-orange-700">
+                        <button 
+                          className="text-orange-500 hover:text-orange-700 cursor-pointer"
+                          onClick={() => router.push(`/dashboard/recipes/${meal.recipe_id}`)}
+                          >
                           Ver detalhes
                         </button>
                       </div>

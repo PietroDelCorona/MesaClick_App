@@ -26,7 +26,10 @@ class ShoppingListItemPublic(ShoppingListItemBase):
 
 class ShoppingListBase(BaseModel):
     name: str
-    user_id: int
+    owner_id: int
+
+    class Config:
+        from_attributes = True
 
 
 class ShoppingListCreate(ShoppingListBase):
@@ -48,3 +51,13 @@ class ShoppingListPublic(ShoppingListBase):
 
 class ShoppingListList(BaseModel):
     shopping_lists: List[ShoppingListPublic]
+
+class ShoppingListItemCreateInList(BaseModel):
+    name: str
+    quantity: float
+    unit: str
+    purchased: bool = False
+
+class ShoppingListCreateWithItems(BaseModel):
+    name: str
+    items: List[ShoppingListItemCreateInList]

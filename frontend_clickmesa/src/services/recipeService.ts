@@ -1,5 +1,5 @@
 
-import { Recipe, RecipeCreate } from "@/types/recipe";
+import { Recipe } from "@/types/recipe";
 
 export async function getRecipes(token: string): Promise<Recipe[]> {
     const response = await fetch("http://localhost:8000/recipes", {
@@ -33,4 +33,31 @@ export async function createRecipe(token: string, recipeData: RecipeCreate): Pro
   }
 
   return response.json();
+}
+
+export async function getMyRecipes(token: string): Promise<Recipe[]> {
+  const response = await fetch("http://localhost:8000/recipes/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 422) {
+      return [];
+    }
+    throw new Error("Erro ao buscar minhas receitas");
+  }
+
+  return response.json();
+}
+
+export async function getRecipeById(token: string, id: string) {
+  const res = await fetch(`http://localhost:8000/recipes/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  if (!res.ok) throw new Error("Erro ao buscar receita");
+  return res.json();
 }

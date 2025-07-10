@@ -90,25 +90,25 @@ class Recipe:
     )
 
     async def add_relations(self, session, ingredients_data, steps_data):
-        """Método assíncrono para adicionar relacionamentos"""
-        # Para ingredientes
-        self.ingredients = []
         for ing in ingredients_data:
-            ingredient = RecipeIngredient(**ing)
-            ingredient.recipe_id = self.id
-            self.ingredients.append(ingredient)
+            ingredient = RecipeIngredient(
+                name=ing["name"],
+                quantity=ing["quantity"],
+                unit=ing["unit"],
+                category=ing.get("category")
+            )
+            ingredient.recipe = self  # isso seta recipe_id automaticamente
             session.add(ingredient)
-        
-        # Para passos
-        self.steps = []
-        for step in steps_data:
-            step_obj = RecipeStep(**step)
-            step_obj.recipe_id = self.id
-            self.steps.append(step_obj)
-            session.add(step_obj)
-        
-        await session.flush()
 
+        for step in steps_data:
+            step_obj = RecipeStep(
+                step_number=step["step_number"],
+                instruction=step["instruction"]
+            )
+            step_obj.recipe = self
+            session.add(step_obj)
+
+        await session.flush()
 
 @table_registry.mapped_as_dataclass
 class RecipeIngredient:
@@ -122,7 +122,7 @@ class RecipeIngredient:
     name: Mapped[str] = mapped_column(String(100))
     quantity: Mapped[float]
     unit: Mapped[str] = mapped_column(String(20))
-    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, init=False)
+    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), init=False)
 
     recipe: Mapped["Recipe"] = relationship(back_populates="ingredients", init=False)
@@ -159,18 +159,23 @@ class ShoppingList:
         default=datetime.now(timezone.utc),
         init=False
     )
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), init=False)
     supermarket_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("supermarkets.id"), nullable=True
     )
     supermarket: Mapped[Optional["Supermarkets"]] = relationship(
-        back_populates="shopping_lists"
+        back_populates="shopping_lists",
+        default=None
     )
 
-    owner: Mapped["User"] = relationship(back_populates="shopping_lists")
+    owner: Mapped["User"] = relationship(
+        back_populates="shopping_lists",
+        default=None
+    )
     items: Mapped[List["ShoppingListItem"]] = relationship(
         back_populates="shopping_list",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        default_factory=list
     )
 
 
@@ -190,7 +195,8 @@ class ShoppingListItem:
                                     ("shopping_lists.id"))
 
     shopping_list: Mapped["ShoppingList"] = relationship(
-        back_populates="items"
+        back_populates="items",
+        init=False
     )
     purchased: Mapped[bool] = mapped_column(default=False)
 
@@ -247,7 +253,7 @@ class Schedules:
         autoincrement=True,
         init=False
     )
-    scheduled_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    scheduled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     meal_type: Mapped[str] = mapped_column(String(20))
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

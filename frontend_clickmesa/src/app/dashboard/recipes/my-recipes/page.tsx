@@ -9,10 +9,12 @@ import { FaSearch, FaShoppingCart, FaTrash, FaPlus } from "react-icons/fa";
 import { FaBowlFood } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
 import { useCart } from "@/hooks/useCart";
-import { getRecipes } from "@/services/recipeService";
+import { getMyRecipes, getRecipeById } from "@/services/recipeService";
 import useUser from "@/hooks/useUser";
 import { Recipe } from "@/types/recipe";
+import { useShoppingListStore } from "@/hooks/useShoppingListStore";
 import { useRouter } from "next/navigation";
+import { scaleRecipe } from "@/utils/scaleRecipe";
 
 export default function Page() {
   const { user } = useUser();
@@ -33,6 +35,8 @@ export default function Page() {
     closeCart,
   } = useCart();
 
+  const { setFromCart } = useShoppingListStore();
+
   useEffect(() => {
     const fetchRecipes = async () => {
       const token = localStorage.getItem("token");
@@ -40,10 +44,8 @@ export default function Page() {
 
       try {
         setIsLoading(true);
-        const data = await getRecipes(token);
-        // Filtrar receitas do usuário logado
-        const userRecipes = data.filter(recipe => recipe.user_id === user.id);
-        setRecipes(userRecipes);
+        const data = await getMyRecipes(token);
+        setRecipes(data);
       } catch (error) {
         console.error("Erro ao buscar receitas:", error);
       } finally {
@@ -61,6 +63,35 @@ export default function Page() {
     )
   );
 
+  // mesma função do carrinho global
+  const handleCreateShoppingList = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const recipesPromises = cartItems.map(item =>
+        getRecipeById(token, item.id)
+      );
+
+      const recipesData = await Promise.all(recipesPromises);
+
+      setFromCart(recipesData.map(recipe => ({
+        id: recipe.id.toString(),
+        title: recipe.title,
+        ingredients: recipe.ingredients.map(ing => ({
+          name: ing.name,
+          quantity: ing.quantity.toString(),
+          unit: ing.unit,
+          purchased: false
+        }))
+      })));
+
+      router.push("/dashboard/shopping-list/id");
+    } catch (err) {
+      console.error("Erro ao criar lista de compra:", err);
+    }
+  };
+
   return (
     <ProtectedPage>
       <div className="min-h-screen">
@@ -73,7 +104,9 @@ export default function Page() {
 
           <main className="flex-1 p-4 sm:ml-64">
             <div className="space-y-4">
-              <h1 className="text-4xl text-orange-600 text-center mt-2">Minhas Receitas</h1>
+              <h1 className="text-4xl text-orange-600 text-center mt-2">
+                Minhas Receitas
+              </h1>
             </div>
 
             {/* Barra de busca */}
@@ -120,11 +153,13 @@ export default function Page() {
                           </button>
                         </Link>
                         <button
-                          onClick={() => addItem({ 
-                            id: recipe.id.toString(), 
-                            title: recipe.title,
-                            quantity: 1 
-                          })}
+                          onClick={() =>
+                            addItem({
+                              id: recipe.id.toString(),
+                              title: recipe.title,
+                              quantity: 1,
+                            })
+                          }
                           className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer"
                         >
                           Adicionar à Lista
@@ -144,19 +179,16 @@ export default function Page() {
                   {searchTerm ? "Tente outra busca" : "Comece adicionando sua primeira receita"}
                 </p>
                 <Link href={'/dashboard/recipes/create'}>
-                    <button
-                    //onClick={() => router.push("/dashboard/recipes/create")}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg inline-flex items-center gap-2 cursor-pointer"
-                    >
+                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg inline-flex items-center gap-2 cursor-pointer">
                     <FaPlus /> Criar Receita
-                    </button>
+                  </button>
                 </Link>
               </div>
             )}
           </main>
         </div>
 
-        {/* Botão do carrinho (flutuante) */}
+        {/* Botão do carrinho */}
         <button
           onClick={openCart}
           className="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 z-30"
@@ -236,7 +268,10 @@ export default function Page() {
                       >
                         Limpar Lista
                       </button>
-                      <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors">
+                      <button
+                        onClick={handleCreateShoppingList}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors"
+                      >
                         Criar Lista de Compra
                       </button>
                     </div>

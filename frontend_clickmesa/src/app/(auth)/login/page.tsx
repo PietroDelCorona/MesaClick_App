@@ -151,7 +151,7 @@ export default function LoginPage() {
 
                                 <button 
                                     type="submit" 
-                                    className={`w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 ${
+                                    className={`w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 cursor-pointer ${
                                         loading ? "opacity-50 cursor-not-allowed" : ""
                                             }`}
                                 >
@@ -165,12 +165,12 @@ export default function LoginPage() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button type="button" className="flex items-center justify-center py-2 px-4 border border-gray-200 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition">
+                                    <button type="button" className="flex items-center justify-center py-2 px-4 border border-gray-200 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition cursor-pointer">
                                         <FcGoogle className="h-5 w-5 mr-2" />
                                         <span className="text-sm font-medium text-gray-700">Google</span>
                                     </button>
 
-                                    <button type="button" className="flex items-center justify-center py-2 px-4 border border-gray-200 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition">
+                                    <button type="button" className="flex items-center justify-center py-2 px-4 border border-gray-200 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition cursor-pointer">
                                         <FaGithub className="h-5 w-5 mr-2" />
                                         <span className="text-sm font-medium text-gray-700">GitHub</span>
                                     </button>

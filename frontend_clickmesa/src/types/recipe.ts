@@ -16,19 +16,14 @@ export interface RecipeBase {
   cook_time_minutes?: number | string;
   servings: number | string;
   category: string;
+  image_url: string | null;
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
-}
-
-export interface RecipeCreate extends RecipeBase {
-  // Pode adicionar campos específicos se necessário
-  owner_id: number | string;
-  image_url: string | null;
 }
 
 export interface Recipe extends RecipeBase {
   id: number;
   created_at: string;
   updated_at?: string;
-  user_id: number;
+  owner_id: number;
 }

@@ -10,8 +10,9 @@ import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from '@/components/ProtectedPage';
 import { getSchedules, createSchedule } from '@/services/scheduleService';
-import { getRecipes } from '@/services/recipeService';
+import { getMyRecipes, getRecipes } from '@/services/recipeService';
 import { Recipe } from '@/types/recipe';
+
 
 // Configuração de localização
 const locales = {
@@ -26,6 +27,8 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+const now = new Date()
+
 // Tipos de eventos
 interface RecipeEvent {
   id: number;
@@ -38,12 +41,15 @@ interface RecipeEvent {
 export default function SchedulePage() {
   const [events, setEvents] = useState<RecipeEvent[]>([]);
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day' | 'agenda'>('week');
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [recipes] = useState<Recipe[]>([]);
+  const [myRecipes, setMyRecipes] = useState<Recipe[]>([]);
+  const [systemRecipes, setSystemRecipes] = useState<Recipe[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
-  const [mealType, setMealType] = useState('lunch');
-  const [portions, setPortions] = useState(1);
+  const [mealType] = useState('lunch');
+  const [portions] = useState(1);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -51,15 +57,18 @@ export default function SchedulePage() {
       if (!token) return;
 
       try {
-        const [schedules, recipes] = await Promise.all([
+        const [schedules, systemRecipesData, myRecipesData] = await Promise.all([
           getSchedules(token),
-          getRecipes(token)
+          getRecipes(token),
+          getMyRecipes(token),
         ]);
-        
-        setRecipes(recipes);
+
+        setSystemRecipes(systemRecipesData);
+        setMyRecipes(myRecipesData);
+
         setEvents(schedules.map(schedule => ({
           id: schedule.id,
-          title: recipes.find(r => r.id === schedule.recipe_id)?.title || "Receita Agendada",
+          title: (myRecipesData.concat(systemRecipesData).find(r => r.id === schedule.recipe_id)?.title) || "Receita Agendada",
           start: new Date(schedule.scheduled_date),
           end: new Date(schedule.scheduled_date),
           recipeId: schedule.recipe_id,
@@ -97,8 +106,11 @@ export default function SchedulePage() {
     }
 
     try {
+      const localDate = selectedSlot.start;
+      const utcISOString = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
+
       const newSchedule = {
-        scheduled_date: selectedSlot.start.toISOString().split('T')[0], 
+        scheduled_date: utcISOString, 
         recipe_id: selectedRecipeId,
         user_id: userId,
         meal_type: mealType,
@@ -150,14 +162,17 @@ export default function SchedulePage() {
                 Agenda de Receitas
               </h1>
               
-              <div className="bg-white rounded-lg shadow-md p-4" style={{ height: '70vh', minWidth: 0 }}>
+              <div className="bg-white rounded-lg shadow-md p-4 cursor-pointer" style={{ height: '70vh', minWidth: 0 }}>
                 <Calendar
                   localizer={localizer}
                   events={events}
                   startAccessor="start"
                   endAccessor="end"
+                  scrollToTime={new Date(0, 0, 0, now.getHours(), now.getMinutes(), 0)}
                   view={calendarView}
+                  date={currentDate}
                   onView={(view) => setCalendarView(view)}
+                  onNavigate={(date) => setCurrentDate(date)}
                   views={['month', 'week', 'day', 'agenda']}
                   selectable
                   onSelectSlot={handleSelectSlot}
@@ -181,6 +196,7 @@ export default function SchedulePage() {
                       borderColor: '#ea580c',
                       borderRadius: '4px',
                       color: 'white',
+                      cursor: 'pointer',
                     },
                   })}
                 />
@@ -199,7 +215,7 @@ export default function SchedulePage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg p-6 max-w-md w-full">
                     <h2 className="text-xl font-bold mb-4">Agendar Refeição</h2>
-                    {recipes.length > 0 ? (
+                    {(myRecipes.length > 0 || systemRecipes.length > 0) ? (
                       <div className="space-y-4">
                         <div>
                           <label className="block mb-1">Receita</label>
@@ -208,12 +224,16 @@ export default function SchedulePage() {
                             onChange={(e) => setSelectedRecipeId(Number(e.target.value))}
                             className="w-full p-2 border rounded"
                           >
-                            <option value="">Selecione uma receita</option>
-                            {recipes.map(recipe => (
-                              <option key={recipe.id} value={recipe.id}>
-                                {recipe.title}
-                              </option>
+                          <optgroup label="Minhas Receitas">
+                            {myRecipes.map(recipe => (
+                              <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
                             ))}
+                          </optgroup>
+                          <optgroup label="Receitas do Sistema">
+                            {systemRecipes.map(recipe => (
+                              <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
+                            ))}
+                          </optgroup>
                           </select>
                         </div>
                                                 
@@ -223,13 +243,13 @@ export default function SchedulePage() {
                               setShowModal(false);
                               setSelectedRecipeId(null);
                             }}
-                            className="px-4 py-2 border rounded cursor-pointer"
+                            className="px-4 py-2 border rounded cursor-pointer hover:bg-gray-300"
                           >
                             Cancelar
                           </button>
                           <button 
                             onClick={handleAddRecipe}
-                            className="px-4 py-2 bg-orange-500 text-white rounded flex items-center gap-1 cursor-pointer"
+                            className="px-4 py-2 bg-orange-500 text-white rounded flex items-center gap-1 cursor-pointer hover:bg-orange-600"
                             disabled={!selectedRecipeId}
                           >
                             <FaPlus /> Agendar
@@ -241,7 +261,7 @@ export default function SchedulePage() {
                         <p>Nenhuma receita disponível</p>
                         <button 
                           onClick={() => setShowModal(false)}
-                          className="px-4 py-2 border rounded cursor-pointer"
+                          className="px-4 py-2 border rounded cursor-pointer hover:bg-grey-300"
                         >
                           Fechar
                         </button>

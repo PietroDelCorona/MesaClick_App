@@ -9,12 +9,13 @@ import { FaSearch, FaShoppingCart, FaTrash } from "react-icons/fa";
 import { FaBowlFood } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
 import { useCart } from "@/hooks/useCart";
-import { getRecipes } from "@/services/recipeService";
-import useUser from "@/hooks/useUser";
+import { getRecipes, getRecipeById } from "@/services/recipeService";
 import { Recipe } from "@/types/recipe";
+import { useShoppingListStore } from "@/hooks/useShoppingListStore";
+import { useRouter } from "next/navigation";
+import { scaleRecipe } from "@/utils/scaleRecipe"
 
 export default function Page() {
-  const { user } = useUser();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +58,37 @@ export default function Page() {
       ingredient.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const { setFromCart } = useShoppingListStore();
+  const router = useRouter();
+
+  const handleCreateShoppingList = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const recipesPromises = cartItems.map(item =>
+        getRecipeById(token, item.id).then(recipe => scaleRecipe(recipe, item.quantity))
+      );
+
+      const scaledRecipesData = await Promise.all(recipesPromises);
+
+      setFromCart(scaledRecipesData.map(recipe => ({
+        id: recipe.id.toString(),
+        title: recipe.title,
+        ingredients: recipe.ingredients.map(ing => ({
+          name: ing.name,
+          quantity: ing.quantity.toString(),
+          unit: ing.unit,
+          purchased: false
+        }))
+      })));
+
+      router.push("/dashboard/shopping-list/id/edit");
+    } catch (err) {
+      console.error("Erro ao criar lista de compra:", err);
+    }
+  };
 
   return (
     <ProtectedPage>
@@ -152,7 +184,7 @@ export default function Page() {
         {/* Botão do carrinho (flutuante) - usando openCart do Zustand */}
         <button
           onClick={openCart}
-          className="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 z-30"
+          className="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 z-30 cursor-pointer"
         >
           <FaShoppingCart className="text-xl" />
           {totalItems > 0 && (
@@ -174,7 +206,7 @@ export default function Page() {
                 <h2 className="text-xl text-orange-500 font-bold">Minha Lista</h2>
                 <button
                   onClick={closeCart}
-                  className="text-black font-bold hover:text-orange-500"
+                  className="text-black font-bold hover:text-orange-500 cursor-pointer"
                 >
                   <FiX size={18} />
                 </button>
@@ -198,14 +230,14 @@ export default function Page() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => updateQuantity(item.id, "decrease")}
-                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200 cursor-pointer"
                             >
                               -
                             </button>
                             <span className="w-6 text-center">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, "increase")}
-                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200 cursor-pointer"
                             >
                               +
                             </button>
@@ -229,11 +261,13 @@ export default function Page() {
                     <div className="mt-4 space-y-3 sticky bottom-0 bg-white pt-3 border-t">
                       <button
                         onClick={clearCart}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors cursor-pointer"
                       >
                         Limpar Lista
                       </button>
-                      <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors">
+                      <button 
+                        onClick={handleCreateShoppingList}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors cursor-pointer">
                         Criar Lista de Compra
                       </button>
                     </div>

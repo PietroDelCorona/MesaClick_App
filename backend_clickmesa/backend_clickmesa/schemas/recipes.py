@@ -11,7 +11,18 @@ class RecipeIngredient(BaseModel):
 class RecipeStep(BaseModel):
     step_number: int
     instruction: str
-    duration_minutes: Optional[int] = None
+    
+
+class RecipeIngredientCreate(BaseModel):
+    name: str
+    quantity: Union[float, str]
+    unit: str
+    category: Optional[str] = None
+
+class RecipeStepCreate(BaseModel):
+    step_number: int
+    instruction: str
+    
 
 class RecipeBase(BaseModel):
     title: str
@@ -30,10 +41,9 @@ class RecipeCreate(BaseModel):
     cook_time_minutes: int = 0
     servings: int = Field(..., gt=0)
     category: str
-    owner_id: int = Field(..., alias="user_id")
     image_url: Optional[str] = None
-    ingredients: List[RecipeIngredient] = Field(..., min_items=1)
-    steps: List[RecipeStep] = Field(..., min_items=1)
+    ingredients: List[RecipeIngredientCreate] = Field(..., min_items=1)
+    steps: List[RecipeStepCreate] = Field(..., min_items=1)
 
     class Config:
         extra = "forbid"
@@ -47,16 +57,20 @@ class RecipeUpdate(BaseModel):
     image_url: Optional[str] = None
     category: Optional[str] = None
 
-class RecipePublic(RecipeBase):
+class RecipePublic(BaseModel):
     id: int
+    title: str
     description: str
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    prep_time_minutes: int
+    cook_time_minutes: int
+    servings: int
+    category: Optional[str]
+    image_url: Optional[str]
     ingredients: List[RecipeIngredient]
     steps: List[RecipeStep]
 
     class Config:
-        orm_mode = True  # Corrigido de 'orm' para 'orm_mode'
+        orm_mode = True
 
 class RecipeList(BaseModel):
     recipes: List[RecipePublic]
@@ -71,3 +85,11 @@ class RecipeCard(BaseModel):
 
     class Config:
         orm_mode = True
+
+class RecipeDetail(RecipeCreate):
+    owner_id: int
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+
+

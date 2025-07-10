@@ -3,23 +3,28 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Annotated, List, Optional
 
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import JSONResponse
 from pydantic import HttpUrl
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend_clickmesa.database import get_session
-from backend_clickmesa.models import Recipe
+from backend_clickmesa.models import Recipe, User
 from backend_clickmesa.schemas.recipes import (
     RecipeCard,
     RecipeCreate,
+    RecipeDetail,
     RecipeIngredient,
     RecipePublic,
     RecipeStep,
     RecipeUpdate,
 )
+from backend_clickmesa.security import get_current_user
 
 router = APIRouter(
     prefix="/recipes",
@@ -27,6 +32,8 @@ router = APIRouter(
 )
 
 Session = Annotated[AsyncSession, Depends(get_session)]
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 @router.get('/', response_model=List[RecipePublic])
@@ -42,16 +49,37 @@ async def read_recipes(
             selectinload(Recipe.ingredients),
             selectinload(Recipe.steps)
         )
+        .where(Recipe.owner_id == 1)
         .offset(skip)
         .limit(limit)
     )
 
     if category:
-        query = query.where(Recipe.category == category)
+        query = query.where(and_(
+            Recipe.owner_id == 1,
+            Recipe.category == category
+        ))
 
     recipes = (await session.scalars(query)).all()
     return [RecipePublic.model_validate(recipe, from_attributes=True) for recipe in recipes]
 
+@router.get('/me', response_model=List[RecipePublic])
+async def get_my_recipes(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: User = Depends(get_current_user),
+):
+    print(f"Buscando receitas do usuário: {current_user.id}")
+    result = await session.execute(
+        select(Recipe)
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.steps)
+        )
+        .where(Recipe.owner_id == current_user.id)
+    )
+    recipes = result.scalars().all()
+    print("Receitas encontradas:", [r.id for r in recipes])
+    return [RecipePublic.model_validate(r, from_attributes=True) for r in recipes]
 
 @router.get('/{recipe_id}', response_model=RecipePublic)
 async def read_recipe(
@@ -76,34 +104,49 @@ async def read_recipe(
     return db_recipe
 
 
-@router.post('/')
+
+@router.post('/', response_model=RecipeDetail)
 async def create_recipe(
     recipe_data: RecipeCreate,
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: User = Depends(get_current_user)
 ):
     try:
-        # Extrai os dados
-        recipe_dict = recipe_data.model_dump()
-        ingredients_data = recipe_dict.pop('ingredients')
-        steps_data = recipe_dict.pop('steps')
-        
-        # Cria a receita básica
-        db_recipe = Recipe(**recipe_dict)
+        # converte para dict apenas campos principais
+        recipe_dict = recipe_data.model_dump(exclude={"ingredients", "steps"})
+
+        # cria receita principal
+        db_recipe = Recipe(**recipe_dict, owner_id=current_user.id)
         session.add(db_recipe)
-        await session.flush()  # Obtém o ID
-        
-        # Adiciona relacionamentos de forma assíncrona
+        await session.flush()  # garante ID
+
+        # cria ingredientes e passos
+        ingredients_data = [ingredient.model_dump() for ingredient in recipe_data.ingredients]
+        steps_data = [step.model_dump() for step in recipe_data.steps]
+
         await db_recipe.add_relations(session, ingredients_data, steps_data)
-        
+
         await session.commit()
-        await session.refresh(db_recipe)
-        return db_recipe
-        
+
+        # garante carregamento dos relacionamentos
+        result = await session.execute(
+            select(Recipe)
+            .options(
+                selectinload(Recipe.ingredients),
+                selectinload(Recipe.steps)
+            )
+            .where(Recipe.id == db_recipe.id)
+        )
+        full_recipe = result.scalar_one()
+
+        return full_recipe
+
     except Exception as e:
         await session.rollback()
         raise HTTPException(422, detail=str(e))
-
+    
 @router.put('/{recipe_id}', response_model=RecipePublic)
+    
 async def update_recipe(
     session: Annotated[AsyncSession, Depends(get_session)],
     recipe_id: int,

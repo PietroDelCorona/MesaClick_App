@@ -73,17 +73,21 @@ async def get_current_user(
             algorithms=[settings.ALGORITHM]
         )
         subject_email = payload.get("sub")
+        print("Token payload:", payload)
+        print("Subject email extraído do token:", subject_email)
 
         if not subject_email:
             raise credentials_exception
     except DecodeError as exc:
         raise credentials_exception from exc
     except ExpiredSignatureError:
+        print("Token expirado")
         raise credentials_exception
 
     user = await session.scalar(
         select(User).where(User.email == subject_email)
     )
+    print(f"Usuário encontrado no banco: id={user.id}, email={user.email}")
 
     if not user:
         raise credentials_exception

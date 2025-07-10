@@ -188,7 +188,7 @@ export default function RegisterPage() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className={`w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-medium shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                                        className={`w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-medium shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer ${
                                             loading ? "opacity-50 cursor-not-allowed" : ""
                                             }`}
                                     >

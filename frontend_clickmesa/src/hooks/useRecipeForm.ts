@@ -3,21 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRecipe } from '@/services/recipeService';
-import { RecipeCreate, RecipeIngredient, RecipeStep } from '@/types/recipe';
+import { RecipeBase, RecipeIngredient, RecipeStep } from '@/types/recipe';
 import useUser from '@/hooks/useUser'; 
 
 export const useRecipeForm = () => {
   const { user } = useUser();
   const router = useRouter();
 
-  const [formData, setFormData] = useState<Omit<RecipeCreate, 'ingredients' | 'steps'>>({
+  const [formData, setFormData] = useState<Omit<RecipeBase, 'ingredients' | 'steps'>>({
     title: '',
     description: '',
     prep_time_minutes: 0,
     cook_time_minutes: 0,
     servings: 0,
     category: '',
-    owner_id: 0,
     image_url: null
   });
 
@@ -91,9 +90,8 @@ export const useRecipeForm = () => {
     }
     
     try {
-      const recipeData: RecipeCreate = {
+      const recipeData: RecipeBase = {
         ...formData,
-        owner_id: user.id,
         ingredients: ingredients
           .filter(ing => ing.name.trim() !== "")
           .map(ing => ({
