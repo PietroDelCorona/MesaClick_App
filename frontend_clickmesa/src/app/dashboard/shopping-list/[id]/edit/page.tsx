@@ -1,5 +1,8 @@
 
 "use client"
+
+import toast from 'react-hot-toast';
+
 import Link from 'next/link';
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
@@ -52,8 +55,10 @@ export default function ShoppingListPage() {
       console.log("Lista criada com sucesso:", created);
       // opcional: redirect ou feedback
       router.push("/dashboard/shopping-list");
+      toast.success("Lista de compras criada com sucesso!");
     } catch (err) {
       console.error(err);
+      toast.error("Não foi possível criar a lista.");
     }
   };
 

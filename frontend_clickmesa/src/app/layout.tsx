@@ -25,6 +25,7 @@ export default function RootLayout({
               borderRadius: '8px',
               background: '#fff',
               color: '#333',
+              minWidth: '450px',
             },
           }}
         />

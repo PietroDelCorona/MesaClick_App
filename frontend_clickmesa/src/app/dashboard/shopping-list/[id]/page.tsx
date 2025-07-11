@@ -7,6 +7,7 @@ import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
 import { getShoppingListById, deleteShoppingList } from "@/services/shoppingListService";
+import toast from "react-hot-toast";
 
 export default function Page() {
   const { id } = useParams();
@@ -42,7 +43,8 @@ export default function Page() {
     try {
       await deleteShoppingList(token, id);
       console.log("Lista deletada com sucesso!");
-      router.push("/dashboard/shopping-list")
+      router.push("/dashboard/shopping-list");
+      toast.success("Lista deletada com sucesso!");
     } catch(err) {
       console.error("Erro ao deletar a lista:", err);
     }   

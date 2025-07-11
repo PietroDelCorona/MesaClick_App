@@ -23,6 +23,7 @@ export default function Page() {
     handleSubmit
   } = useRecipeForm();
 
+
   return (
     <ProtectedPage>
       <div className="min-h-screen bg-gray-50">
@@ -243,6 +244,7 @@ export default function Page() {
                   <div className="pt-4">
                     <button
                       type="submit"
+
                       className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <FaPlus /> Criar Receita

@@ -15,7 +15,6 @@ import { Recipe } from "@/types/recipe";
 import { useShoppingListStore } from "@/hooks/useShoppingListStore";
 import { useRouter } from "next/navigation";
 import { scaleRecipe } from "@/utils/scaleRecipe";
-import { IoTerminal } from "react-icons/io5";
 
 export default function Page() {
   const { user } = useUser();

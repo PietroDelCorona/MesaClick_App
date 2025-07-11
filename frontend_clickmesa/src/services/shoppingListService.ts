@@ -1,6 +1,6 @@
 
-import { ShoppingList } from "@/types/shoppingList";
-import { ShoppingListItem } from "@/hooks/useShoppingListStore";
+import { ShoppingList, ShoppingListItem } from "@/types/shoppingList";
+
 
 export async function getMyShoppingLists(token: string): Promise<ShoppingList[]> {
     const response = await fetch("http://localhost:8000/shopping-lists/me", {

@@ -1,5 +1,7 @@
 "use client";
 
+import toast from "react-hot-toast";
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRecipe } from '@/services/recipeService';
@@ -88,6 +90,8 @@ export const useRecipeForm = () => {
       alert("Sessão expirada. Faça login novamente.");
       return;
     }
+
+    const toastId = toast.loading("Criando receita...");
     
     try {
       const recipeData: RecipeBase = {
@@ -109,11 +113,12 @@ export const useRecipeForm = () => {
       };
 
       await createRecipe(token, recipeData);
+      toast.success("Receita criada com sucesso!", { id: toastId });
       router.push("/dashboard/recipes/my-recipes");
 
     } catch (error) {
-      console.error("Erro ao criar receita:", error);
-      alert(error instanceof Error ? error.message : "Erro desconhecido ao criar receita.");
+      toast.error("Erro ao criar a receita", { id: toastId })
+      console.error("Erro ao criar receita:", error);      
     }   
   };
 

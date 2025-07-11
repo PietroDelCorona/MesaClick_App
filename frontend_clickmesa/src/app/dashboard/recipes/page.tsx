@@ -1,5 +1,7 @@
 "use client";
 
+import toast from "react-hot-toast";
+
 import { useEffect, useState } from "react";
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
@@ -149,11 +151,13 @@ export default function Page() {
                           </button>
                         </Link>
                         <button
-                          onClick={() => addItem({ 
+                          onClick={() => {addItem({ 
                             id: recipe.id.toString(), 
                             title: recipe.title,
                             quantity: 1 
-                          })}
+                          });
+                          toast.success(`Receita de "${recipe.title}" adicionada ao carrinho!`);
+                          }}
                           className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer"
                         >
                           Adicionar à Lista

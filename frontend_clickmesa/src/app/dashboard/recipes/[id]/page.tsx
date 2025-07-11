@@ -170,7 +170,7 @@ export default function RecipePage() {
                       quantity: 1,
                     });
                     console.log("Adicionado ao carrinho:", recipe.title);
-                    toast.success(`"${recipe.title}" adicionada ao carrinho!`);
+                    toast.success(`Receita de "${recipe.title}" adicionada ao carrinho!`);
                     router.back();
                     }} 
                     className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors cursor-pointer"

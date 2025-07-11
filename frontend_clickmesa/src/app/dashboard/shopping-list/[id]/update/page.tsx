@@ -1,6 +1,8 @@
 
 "use client";
 
+import toast from 'react-hot-toast';
+
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -55,9 +57,11 @@ export default function UpdateShoppingListPage() {
         items: list.items
       });
       console.log("Lista atualizada com sucesso!");
+      toast.success(`"${list.name}" atualizada com sucesso!`);
       router.push(`/dashboard/shopping-list/${id}`);
     } catch (err) {
       console.error(err);
+      toast.error(`Não foi possível atualizar "${list.name}"`);
     }
   };
 

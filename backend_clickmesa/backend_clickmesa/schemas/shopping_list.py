@@ -59,5 +59,5 @@ class ShoppingListItemCreateInList(BaseModel):
     purchased: bool = False
 
 class ShoppingListCreateWithItems(BaseModel):
-    name: str
+    name: Optional[str] = None
     items: List[ShoppingListItemCreateInList]
