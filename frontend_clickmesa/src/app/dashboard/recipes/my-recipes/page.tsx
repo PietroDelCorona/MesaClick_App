@@ -15,6 +15,7 @@ import { Recipe } from "@/types/recipe";
 import { useShoppingListStore } from "@/hooks/useShoppingListStore";
 import { useRouter } from "next/navigation";
 import { scaleRecipe } from "@/utils/scaleRecipe";
+import { IoTerminal } from "react-icons/io5";
 
 export default function Page() {
   const { user } = useUser();
@@ -70,12 +71,12 @@ export default function Page() {
       if (!token) return;
 
       const recipesPromises = cartItems.map(item =>
-        getRecipeById(token, item.id)
+        getRecipeById(token, item.id).then(recipe => scaleRecipe(recipe, item.quantity))
       );
 
-      const recipesData = await Promise.all(recipesPromises);
+      const scaledRecipesData = await Promise.all(recipesPromises);
 
-      setFromCart(recipesData.map(recipe => ({
+      setFromCart(scaledRecipesData.map(recipe => ({
         id: recipe.id.toString(),
         title: recipe.title,
         ingredients: recipe.ingredients.map(ing => ({
@@ -86,7 +87,7 @@ export default function Page() {
         }))
       })));
 
-      router.push("/dashboard/shopping-list/id");
+      router.push("/dashboard/shopping-list/edit");
     } catch (err) {
       console.error("Erro ao criar lista de compra:", err);
     }
@@ -233,14 +234,14 @@ export default function Page() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => updateQuantity(item.id, "decrease")}
-                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200 cursor-pointer"
                             >
                               -
                             </button>
                             <span className="w-6 text-center">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, "increase")}
-                              className="bg-gray-100 px-2 rounded hover:bg-gray-200"
+                              className="bg-gray-100 px-2 rounded hover:bg-gray-200 cursor-pointer"
                             >
                               +
                             </button>
@@ -264,13 +265,13 @@ export default function Page() {
                     <div className="mt-4 space-y-3 sticky bottom-0 bg-white pt-3 border-t">
                       <button
                         onClick={clearCart}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors cursor-pointer"
                       >
                         Limpar Lista
                       </button>
                       <button
                         onClick={handleCreateShoppingList}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md transition-colors cursor-pointer"
                       >
                         Criar Lista de Compra
                       </button>

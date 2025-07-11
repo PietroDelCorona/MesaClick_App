@@ -1,5 +1,7 @@
 "use client";
 
+import toast from "react-hot-toast";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import InsiderHeader from "@/components/InsiderHeader";
@@ -11,9 +13,13 @@ import { PiBowlFood } from "react-icons/pi";
 import { BiSolidDrink } from "react-icons/bi";
 import { LuDessert } from "react-icons/lu";
 import { Recipe} from "@/types/recipe";
+import { useCart } from "@/hooks/useCart";
+import { useRouter } from "next/navigation";
 
 export default function RecipePage() {
   const { id } = useParams();
+  const { addItem } = useCart();
+  const router = useRouter();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +163,18 @@ export default function RecipePage() {
 
                 {/* Botão de Ação */}
                 <div className="flex justify-center mt-8">
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors cursor-pointer">
+                  <button
+                    onClick={() => {addItem({
+                      id: recipe.id.toString(),
+                      title: recipe.title,
+                      quantity: 1,
+                    });
+                    console.log("Adicionado ao carrinho:", recipe.title);
+                    toast.success(`"${recipe.title}" adicionada ao carrinho!`);
+                    router.back();
+                    }} 
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
+                  >
                     <FaShoppingBasket /> Adicionar à Lista de Compra
                   </button>
                 </div>
