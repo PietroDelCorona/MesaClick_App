@@ -107,6 +107,7 @@ export default function Page() {
                         name="servings"
                         value={formData.servings}
                         onChange={handleChange}
+                        onFocus={(e) => e.target.select()}
                         required
                         min="1"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -123,6 +124,7 @@ export default function Page() {
                         name="prep_time_minutes"
                         value={formData.prep_time_minutes}
                         onChange={handleChange}
+                        onFocus={(e) => e.target.select()}
                         required
                         min="1"
                         className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -141,6 +143,7 @@ export default function Page() {
                       name="cook_time_minutes"
                       value={formData.cook_time_minutes}
                       onChange={handleChange}
+                      onFocus={(e) => e.target.select()}
                       min="0"
                       className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Ex: 30"
@@ -167,6 +170,7 @@ export default function Page() {
                             type="number"
                             value={ingredient.quantity}
                             onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
+                            onFocus={(e) => e.target.select()}
                             placeholder="Qtd"
                             className="col-span-2 px-3 py-2 border border-gray-300 rounded-lg"
                             min="0"

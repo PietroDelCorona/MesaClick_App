@@ -1,13 +1,18 @@
 
 "use client";
 
+import toast from "react-hot-toast";
+
+import Link from 'next/link';
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
 import { getShoppingListById, deleteShoppingList } from "@/services/shoppingListService";
-import toast from "react-hot-toast";
+import { groupIngredients } from "@/utils/groupIngredient";
+import { IoMdArrowRoundBack } from "react-icons/io";
+
 
 export default function Page() {
   const { id } = useParams();
@@ -20,8 +25,8 @@ export default function Page() {
   const handleDownloadShoppingList = () => {
     if (!list) return;
 
-    const listContent = list.items
-      .filter(item => !item.purchased)
+    const listContent = groupIngredients(list.items
+      .filter(item => !item.purchased))
       .map(item => `${item.name} - Quantidade: ${item.quantity} ${item.unit}`)
       .join("\n");
 
@@ -89,24 +94,33 @@ export default function Page() {
           </div>
 
           <div className="flex-1 lg:pl-64 p-4">
+            <div>
+              <Link href="/dashboard/shopping-list">
+                <button className="flex items-center text-orange-500 pl-8 mb-4 cursor-pointer">
+                  <IoMdArrowRoundBack className="mr-2" />
+                  Voltar
+                </button>
+              </Link>
+            </div>
             {loading && <p>Carregando...</p>}
             {!loading && !list && <p>Lista não encontrada.</p>}
             {list && (
               <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
                 <h1 className="text-2xl font-bold mb-4 text-orange-600">{list.name}</h1>
-                {list.items.filter(item => !item.purchased).length > 0 ? (
-                  <ul className="space-y-2">
-                    {list.items
-                      .filter(item => !item.purchased)
-                      .map(item => (
-                        <li key={item.id} className="text-black-600">
-                          {item.name} - {item.quantity} {item.unit}
-                        </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-orange-600 font-semibold">Todos os itens foram comprados!</p>
-                )}
+                {(() => {
+                  const groupedItems = groupIngredients(list.items.filter(item => !item.purchased));
+                    return groupedItems.length > 0 ? (
+                      <ul className="space-y-2">
+                        {groupedItems.map((item, index) => (
+                          <li key={index} className="text-black-600">
+                            {item.name} - {item.quantity} {item.unit}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-orange-600 font-semibold">Todos os itens foram comprados!</p>
+                    );
+                })()}
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <button
                     onClick={() => router.push(`/dashboard/shopping-list/${id}/update`)}

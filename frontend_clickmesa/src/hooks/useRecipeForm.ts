@@ -52,14 +52,13 @@ export const useRecipeForm = () => {
   };
 
   const handleIngredientChange = (index: number, field: keyof RecipeIngredient, value: string) => {
-    setIngredients(prev =>
-      prev.map((item, i) =>
-        i === index ? {
-          ...item,
-          [field]: field === 'quantity' ? Number(value) || 0 : value
-        } : item
-      )
-    );
+    const newIngredients = [...ingredients];
+    if (field === 'quantity') {
+      newIngredients[index][field] = parseFloat(value) || 0;
+    } else {
+      newIngredients[index][field] = value;
+    }
+    setIngredients(newIngredients);
   };
 
   const addStep = () => {

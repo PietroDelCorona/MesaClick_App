@@ -42,7 +42,6 @@ export default function SchedulePage() {
   const [events, setEvents] = useState<RecipeEvent[]>([]);
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day' | 'agenda'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [recipes] = useState<Recipe[]>([]);
   const [myRecipes, setMyRecipes] = useState<Recipe[]>([]);
   const [systemRecipes, setSystemRecipes] = useState<Recipe[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -66,13 +65,17 @@ export default function SchedulePage() {
         setSystemRecipes(systemRecipesData);
         setMyRecipes(myRecipesData);
 
-        setEvents(schedules.map(schedule => ({
-          id: schedule.id,
-          title: (myRecipesData.concat(systemRecipesData).find(r => r.id === schedule.recipe_id)?.title) || "Receita Agendada",
-          start: new Date(schedule.scheduled_date),
-          end: new Date(schedule.scheduled_date),
-          recipeId: schedule.recipe_id,
-        })));
+        setEvents(schedules.map(schedule => {
+          const utcDate = new Date(schedule.scheduled_date);
+          const localDate = new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+          return {
+            id: schedule.id,
+            title: (myRecipesData.concat(systemRecipesData).find(r => r.id === schedule.recipe_id)?.title) || "Receita Agendada",
+            start: localDate,
+            end: localDate,
+            recipeId: schedule.recipe_id,
+          };
+        }));
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -87,6 +90,8 @@ export default function SchedulePage() {
   };
 
   const handleAddRecipe = async () => {
+    const recipes = [...myRecipes, ...systemRecipes];
+
     if (recipes.length === 0) {
       alert("Nenhuma receita disponível. Cadastre receitas primeiro.");
       return;
@@ -106,8 +111,8 @@ export default function SchedulePage() {
     }
 
     try {
-      const localDate = selectedSlot.start;
-      const utcISOString = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
+      // apenas use:
+      const utcISOString = selectedSlot.start.toISOString();
 
       const newSchedule = {
         scheduled_date: utcISOString, 
