@@ -1,6 +1,7 @@
+import { apiFetch } from "./api";
 
 export async function getRecipeById(token: string, id: number) {
-  const res = await fetch(`http://localhost:8000/recipes/${id}`, {
+  const res = await apiFetch(`http://localhost:8000/recipes/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

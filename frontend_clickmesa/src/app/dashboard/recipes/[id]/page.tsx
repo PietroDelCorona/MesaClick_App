@@ -15,6 +15,7 @@ import { LuDessert } from "react-icons/lu";
 import { Recipe} from "@/types/recipe";
 import { useCart } from "@/hooks/useCart";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/services/api";
 
 export default function RecipePage() {
   const { id } = useParams();
@@ -37,7 +38,7 @@ export default function RecipePage() {
       try {
         setIsLoading(true);
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:8000/recipes/${id}`, {
+        const response = await apiFetch(`http://localhost:8000/recipes/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

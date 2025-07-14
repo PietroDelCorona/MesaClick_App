@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import {format, parse, startOfWeek, getDay} from 'date-fns';
-import {ptBR} from 'date-fns/locale/pt-BR';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { FaPlus } from 'react-icons/fa';
 import InsiderHeader from "@/components/InsiderHeader";
@@ -12,9 +12,8 @@ import ProtectedPage from '@/components/ProtectedPage';
 import { getSchedules, createSchedule } from '@/services/scheduleService';
 import { getMyRecipes, getRecipes } from '@/services/recipeService';
 import { Recipe } from '@/types/recipe';
+import toast from 'react-hot-toast';
 
-
-// Configuração de localização
 const locales = {
   'pt-BR': ptBR,
 };
@@ -29,7 +28,6 @@ const localizer = dateFnsLocalizer({
 
 const now = new Date()
 
-// Tipos de eventos
 interface RecipeEvent {
   id: number;
   title: string;
@@ -47,9 +45,17 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
+  const [searchText, setSearchText] = useState('');
   const [mealType] = useState('lunch');
   const [portions] = useState(1);
-  
+  const [showRecipeList, setShowRecipeList] = useState(false);
+
+  const recipes = [...myRecipes, ...systemRecipes];
+
+  const filteredRecipes = recipes.filter(recipe =>
+    recipe.title.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
@@ -83,15 +89,13 @@ export default function SchedulePage() {
 
     fetchData();
   }, []);
- 
+
   const handleSelectSlot = (slotInfo: { start: Date; end: Date }) => {
     setSelectedSlot(slotInfo);
     setShowModal(true);
   };
 
   const handleAddRecipe = async () => {
-    const recipes = [...myRecipes, ...systemRecipes];
-
     if (recipes.length === 0) {
       alert("Nenhuma receita disponível. Cadastre receitas primeiro.");
       return;
@@ -104,18 +108,16 @@ export default function SchedulePage() {
 
     const token = localStorage.getItem("token");
     const userId = Number(localStorage.getItem("user_id"));
-    
     if (!token || !userId) {
       alert("Sessão inválida. Faça login novamente.");
       return;
     }
 
     try {
-      // apenas use:
       const utcISOString = selectedSlot.start.toISOString();
 
       const newSchedule = {
-        scheduled_date: utcISOString, 
+        scheduled_date: utcISOString,
         recipe_id: selectedRecipeId,
         user_id: userId,
         meal_type: mealType,
@@ -137,6 +139,8 @@ export default function SchedulePage() {
 
       setShowModal(false);
       setSelectedRecipeId(null);
+      setSearchText('');
+      toast.success("Receita agendada com sucesso!")
     } catch (error) {
       let errorMessage = "Erro desconhecido";
       if (error instanceof Error) {
@@ -166,7 +170,7 @@ export default function SchedulePage() {
               <h1 className="text-2xl sm:text-4xl text-orange-600 text-center mb-6">
                 Agenda de Receitas
               </h1>
-              
+
               <div className="bg-white rounded-lg shadow-md p-4 cursor-pointer" style={{ height: '70vh', minWidth: 0 }}>
                 <Calendar
                   localizer={localizer}
@@ -207,7 +211,6 @@ export default function SchedulePage() {
                 />
               </div>
 
-              {/* Botão de ação flutuante */}
               <button
                 onClick={() => setShowModal(true)}
                 className="fixed bottom-6 right-6 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 z-30 cursor-pointer"
@@ -215,44 +218,82 @@ export default function SchedulePage() {
                 <FaPlus className="text-xl" />
               </button>
 
-              {/* Modal para adicionar receita */}
               {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg p-6 max-w-md w-full">
                     <h2 className="text-xl font-bold mb-4">Agendar Refeição</h2>
-                    {(myRecipes.length > 0 || systemRecipes.length > 0) ? (
+
+                    {(recipes.length > 0) ? (
                       <div className="space-y-4">
+                        {selectedSlot && (
+                          <div className="text-orange-600">
+                            <span className="font-medium">Data e hora selecionada:</span><br />
+                            {selectedSlot.start.toLocaleDateString()} {selectedSlot.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+
                         <div>
-                          <label className="block mb-1">Receita</label>
+                          <label className="block mb-1">Buscar Receita</label>
+                          <input
+                            type="text"
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            onFocus={() => setShowRecipeList(true)}
+                            onBlur={() => setTimeout(() => setShowRecipeList(false), 200)}
+                            placeholder="Clique para buscar"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        
+                        {(showRecipeList || searchText.length > 0) && (
+                          <div className="max-h-48 overflow-y-auto border rounded p-2 space-y-1 mt-2">
+                            {filteredRecipes.map(recipe => (
+                              <div
+                                key={recipe.id}
+                                onClick={() => setSelectedRecipeId(recipe.id)}
+                                className={`p-2 rounded cursor-pointer ${selectedRecipeId === recipe.id ? 'bg-orange-100' : 'hover:bg-gray-100'}`}
+                              >
+                                {recipe.title}
+                              </div>
+                            ))}
+                            {filteredRecipes.length === 0 && (
+                              <p className="text-sm text-gray-500 text-center">Nenhuma receita encontrada.</p>
+                            )}
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="block mb-1">Ou selecione manualmente</label>
                           <select
                             value={selectedRecipeId || ''}
                             onChange={(e) => setSelectedRecipeId(Number(e.target.value))}
                             className="w-full p-2 border rounded"
                           >
-                          <optgroup label="Minhas Receitas">
-                            {myRecipes.map(recipe => (
-                              <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
-                            ))}
-                          </optgroup>
-                          <optgroup label="Receitas do Sistema">
-                            {systemRecipes.map(recipe => (
-                              <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
-                            ))}
-                          </optgroup>
+                            <optgroup label="Minhas Receitas">
+                              {myRecipes.map(recipe => (
+                                <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Receitas do Sistema">
+                              {systemRecipes.map(recipe => (
+                                <option key={recipe.id} value={recipe.id}>{recipe.title}</option>
+                              ))}
+                            </optgroup>
                           </select>
                         </div>
-                                                
+
                         <div className="flex justify-end gap-2">
-                          <button 
+                          <button
                             onClick={() => {
                               setShowModal(false);
                               setSelectedRecipeId(null);
+                              setSearchText('');
                             }}
                             className="px-4 py-2 border rounded cursor-pointer hover:bg-gray-300"
                           >
                             Cancelar
                           </button>
-                          <button 
+                          <button
                             onClick={handleAddRecipe}
                             className="px-4 py-2 bg-orange-500 text-white rounded flex items-center gap-1 cursor-pointer hover:bg-orange-600"
                             disabled={!selectedRecipeId}
@@ -264,7 +305,7 @@ export default function SchedulePage() {
                     ) : (
                       <div className="text-center py-4">
                         <p>Nenhuma receita disponível</p>
-                        <button 
+                        <button
                           onClick={() => setShowModal(false)}
                           className="px-4 py-2 border rounded cursor-pointer hover:bg-grey-300"
                         >

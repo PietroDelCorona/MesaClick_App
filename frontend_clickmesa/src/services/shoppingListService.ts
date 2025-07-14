@@ -1,9 +1,10 @@
 
 import { ShoppingList, ShoppingListItem } from "@/types/shoppingList";
+import { apiFetch } from "./api";
 
 
 export async function getMyShoppingLists(token: string): Promise<ShoppingList[]> {
-    const response = await fetch("http://localhost:8000/shopping-lists/me", {
+    const response = await apiFetch("http://localhost:8000/shopping-lists/me", {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -21,7 +22,7 @@ export async function getMyShoppingLists(token: string): Promise<ShoppingList[]>
 }
 
 export async function getShoppingListById(token: string, id:string) {
-    const res = await fetch(`http://localhost:8000/shopping-lists/${id}`, {
+    const res = await apiFetch(`http://localhost:8000/shopping-lists/${id}`, {
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -37,7 +38,7 @@ export async function createShoppingListWithItems(
     token: string,
     items: ShoppingListItem[]
 ) {
-    const response = await fetch("http://localhost:8000/shopping-lists/with-items", {
+    const response = await apiFetch("http://localhost:8000/shopping-lists/with-items", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -61,7 +62,7 @@ export async function updateShoppingListWithItems(
     name: string,
     items: ShoppingListItem[]
 ) {
-    const response = await fetch(`http://localhost:8000/shopping-lists/${id}/with-items`, {
+    const response = await apiFetch(`http://localhost:8000/shopping-lists/${id}/with-items`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -82,7 +83,7 @@ export async function updateShoppingListWithItems(
 }
 
 export async function deleteShoppingList(token: string, id: string | number) {
-    const response = await fetch(`http://localhost:8000/shopping-lists/${id}`, {
+    const response = await apiFetch(`http://localhost:8000/shopping-lists/${id}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",

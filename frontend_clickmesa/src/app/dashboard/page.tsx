@@ -80,6 +80,10 @@ export default function Page() {
             })
         );
 
+        mealsWithTitles.sort((a, b) =>
+          new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime()        
+        );
+
         setUpcomingMeals(mealsWithTitles);
         setTotalRecipes(myRecipes.length);
         setTotalShoppingLists(shoppingLists.length); 

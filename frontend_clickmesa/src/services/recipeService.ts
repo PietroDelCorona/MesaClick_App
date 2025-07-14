@@ -1,8 +1,9 @@
 
 import { Recipe } from "@/types/recipe";
+import { apiFetch } from "./api";
 
 export async function getRecipes(token: string): Promise<Recipe[]> {
-    const response = await fetch("http://localhost:8000/recipes", {
+    const response = await apiFetch("http://localhost:8000/recipes", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -17,7 +18,7 @@ export async function getRecipes(token: string): Promise<Recipe[]> {
 }
 
 export async function createRecipe(token: string, recipeData: RecipeCreate): Promise<Recipe> {
-  const response = await fetch('http://localhost:8000/recipes', {
+  const response = await apiFetch('http://localhost:8000/recipes', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +37,7 @@ export async function createRecipe(token: string, recipeData: RecipeCreate): Pro
 }
 
 export async function getMyRecipes(token: string): Promise<Recipe[]> {
-  const response = await fetch("http://localhost:8000/recipes/me", {
+  const response = await apiFetch("http://localhost:8000/recipes/me", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -53,7 +54,7 @@ export async function getMyRecipes(token: string): Promise<Recipe[]> {
 }
 
 export async function getRecipeById(token: string, id: string) {
-  const res = await fetch(`http://localhost:8000/recipes/${id}`, {
+  const res = await apiFetch(`http://localhost:8000/recipes/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
