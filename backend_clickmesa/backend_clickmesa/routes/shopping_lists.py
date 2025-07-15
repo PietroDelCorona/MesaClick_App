@@ -181,7 +181,6 @@ async def update_shopping_list_with_items(
             detail='Lista de compras não encontrada'
         )
     
-    db_shopping_list.name = shopping_list_data.name
 
     print("Payload recebido pelo PUT:", shopping_list_data.items)
 

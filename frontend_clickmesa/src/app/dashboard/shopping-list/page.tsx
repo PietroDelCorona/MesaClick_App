@@ -25,7 +25,8 @@ export default function Page() {
       try {
         setLoading(true);
         const lists = await getMyShoppingLists(token);
-        console.log("Minhas listas listas recebidas:", lists)
+        console.log("Minhas listas listas recebidas:", lists);
+        lists.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setShoppingLists(lists);
       } catch (err) {
         console.error(err);

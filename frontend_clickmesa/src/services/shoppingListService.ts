@@ -59,7 +59,6 @@ export async function createShoppingListWithItems(
 export async function updateShoppingListWithItems(
     token: string,
     id: string | number,
-    name: string,
     items: ShoppingListItem[]
 ) {
     const response = await apiFetch(`http://localhost:8000/shopping-lists/${id}/with-items`, {
@@ -69,7 +68,6 @@ export async function updateShoppingListWithItems(
             Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-            name,
             items
         })
     });
