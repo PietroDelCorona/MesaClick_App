@@ -16,9 +16,11 @@
 # next.js
 /.next/
 /out/
+.next/cache/
 
 # production
 /build
+/dist/  # Se você tiver um diretório dist para o backend
 
 # misc
 .DS_Store
@@ -30,12 +32,36 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files - versão mais específica e segura
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production.local
+!.env.production  # Opcional: se quiser commit arquivo .env.production exemplo
+!.env.example    # Arquivo de exemplo pode ser commitado
 
 # vercel
 .vercel
+.vercel_build_output
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Backend Python (FastAPI) - adicione se aplicável
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.sqlite3
+*.pyc
+.pytest_cache/

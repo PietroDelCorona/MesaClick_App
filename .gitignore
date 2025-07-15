@@ -8,6 +8,7 @@ __pycache__/
 # Variáveis de ambiente
 .env
 .env.local
+.env*
 
 # Frontend (adicione estas linhas se aplicável)
 frontend_clickmesa/node_modules/
