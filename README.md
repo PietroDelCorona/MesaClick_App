@@ -220,11 +220,11 @@ As funcionalidades de "Aceitar outros produtos não oriundos de receitas" e "Mod
 
 ### Validação
 
-ada a limitação de tempo inerente ao ciclo de desenvolvimento deste projeto, a validação do ClickMesa App será prioritariamente focada na demonstração prática de suas funcionalidades chave durante a apresentação do trabalho. Esta abordagem pragmática visa validar a eficácia da solução por meio da sua operação real, permitindo que a audiência observe diretamente o funcionamento da aplicação e a concretização dos requisitos propostos.
+Dada a limitação de tempo inerente ao ciclo de desenvolvimento deste projeto, a validação do ClickMesa App foi prioritariamente focada na demonstração prática de suas funcionalidades chave durante o processo de desenvolvimento. Um grupo de 5 usuários-teste (selecionados entre colegas desenvolvedores e potenciais usuários finais) participou ativamente da refinagem das funcionalidades críticas. Esta abordagem pragmática teve como objetivo de validar a eficácia da solução por meio da sua operação real, permitindo que o desenvolvedor principal observasse diretamente o funcionamento da aplicação e a concretização dos requisitos propostos.
 
-Neste contexto, a validação será realizada da seguinte forma:
+Neste contexto, a validação com os potenciais usuários foi realizada da seguinte forma:
 
-* **Apresentação Interativa e Fluxos de Uso:** Durante a apresentação, serão percorridos os principais fluxos de uso da aplicação, simulando cenários reais de interação do usuário. Isso incluirá:
+* **Apresentação Interativa e Fluxos de Uso:** Durante a apresentação, foram percorridos os principais fluxos de uso da aplicação, simulando cenários reais de interação do usuário. Isso incluirá:
 
 * **Criação e Gestão de Contas de Usuário:** Demonstração do processo de cadastro e acesso à plataforma.
 
@@ -232,13 +232,13 @@ Neste contexto, a validação será realizada da seguinte forma:
 
 * **Criação de Listas de Compras:** Apresentação da geração de listas, a partir de receitas. 
 
-* **Diferencial de Localização de Supermercados:** Uma ênfase especial será dada à demonstração desta funcionalidade única, mostrando como o ClickMesa App integra dados de supermercados com suas localizações para auxiliar o usuário na etapa de compras.
+* **Diferencial de Localização de Supermercados:** Foi dada à demonstração desta funcionalidade única, mostrando como o ClickMesa App integra dados de supermercados com suas localizações para auxiliar o usuário na etapa de compras.
 
-Os testes serão executados em tempo real, evidenciando a responsividade e a integridade das operações. Embora não seja um teste de carga ou de performance exaustivo, a execução direta das funcionalidades servirá como uma prova de conceito robusta da arquitetura e implementação. A intenção é mostrar que a aplicação responde como esperado, que os dados são persistidos corretamente e que as interações entre as diferentes partes do sistema ocorrem sem falhas visíveis.
+Os testes foram executados em tempo real, evidenciando a responsividade e a integridade das operações. Embora não tivesse sido um teste de carga ou de performance exaustivo, a execução direta das funcionalidades serviu como uma prova de conceito robusta da arquitetura e implementação. A intenção foi mostrar que a aplicação responde como esperado, que os dados são persistidos corretamente e que as interações entre as diferentes partes do sistema ocorrem sem falhas visíveis.
 
-A validação se concentrará em provar que o conceito do ClickMesa App é funcional e que as tecnologias e o design de arquitetura escolhidos foram eficazes para entregar os requisitos principais. Aspectos como usabilidade e experiência do usuário serão avaliados de forma qualitativa através da interação e feedback direto dos avaliadores.
+A validação se concentrou em provar que o conceito do ClickMesa App foi funcional e que as tecnologias e o design de arquitetura escolhidos foram eficazes para entregar os requisitos principais. Aspectos como usabilidade e experiência do usuário foram avaliados de forma qualitativa através da interação e feedback direto dos avaliadores.
 
-Esta estratégia de validação, embora compacta, é essencial para demonstrar a viabilidade técnica e o valor prático do ClickMesa App dentro do prazo estabelecido. Ela oferece uma visão clara e tangível do produto final, consolidando a compreensão do projeto e seu potencial.
+Esta estratégia de validação, embora compacta, foi essencial para demonstrar a viabilidade técnica e o valor prático do ClickMesa App dentro do prazo estabelecido. Ela ofereceu uma visão clara e tangível do produto final, consolidando a compreensão do projeto e seu potencial.
 
 ### Estratégia
 
