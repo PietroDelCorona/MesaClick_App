@@ -2,10 +2,23 @@ import { Inter } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] }); // Configuração
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter'
+});
 
+// Metadata padrão
 export const metadata = {
   title: 'Meu App',
+};
+
+// Novo export para viewport (Next.js 13.2+)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  // userScalable: false, // Opcional se quiser bloquear zoom
 };
 
 export default function RootLayout({
@@ -14,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}> {/* Fonte aplicada */}
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
         {children}
         <Toaster
           position='top-center'
@@ -23,8 +36,8 @@ export default function RootLayout({
           toastOptions={{
             style: {
               borderRadius: '8px',
-              background: '#fff',
-              color: '#333',
+              background: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
               minWidth: '400px',
             },
           }}
