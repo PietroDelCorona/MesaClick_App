@@ -55,29 +55,31 @@ export default function Page() {
         });
 
         const mealsWithTitles = await Promise.all(
-            upcoming.map(async meal => {
-                try {
-                  if(!meal.recipe_id) {
-                    return {
-                      ...meal,
-                      recipe_title:"Sem receita associada"
-                    };
+          upcoming.map(async meal => {
+              try {
+                  if (!meal.recipe_id) {
+                      return {
+                          ...meal,
+                          recipe_title: "Sem receita associada",
+                          title: "Sem receita associada"
+                      };
                   }
 
                   const recipe = await getRecipeById(token, meal.recipe_id);
-                    return {
-                        ...meal,
-                        recipe_title: recipe.title
-                    };
-                    
-                } catch (error) {
-                    console.error(`Erro ao buscar receita ${meal.recipe_id}:`, error);
-                    return {
-                        ...meal,
-                        recipe_title: "Receita não encontrada"
-                    };
-                }
-            })
+                  return {
+                      ...meal,
+                      recipe_title: recipe.title,
+                      title: recipe.title
+                  };
+              } catch (error) {
+                  console.error(`Erro ao buscar receita ${meal.recipe_id}:`, error);
+                  return {
+                      ...meal,
+                      recipe_title: "Receita não encontrada",
+                      title: "Receita não encontrada"
+                  };
+              }
+          })
         );
 
         mealsWithTitles.sort((a, b) =>

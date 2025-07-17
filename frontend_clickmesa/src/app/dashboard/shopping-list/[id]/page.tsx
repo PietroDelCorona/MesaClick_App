@@ -12,11 +12,12 @@ import ProtectedPage from "@/components/ProtectedPage";
 import { getShoppingListById, deleteShoppingList } from "@/services/shoppingListService";
 import { groupIngredients } from "@/utils/groupIngredient";
 import { IoMdArrowRoundBack } from "react-icons/io";
+import { ShoppingList } from "@/types/shoppingList";
 
 
 export default function Page() {
-  const { id } = useParams();
-  const [list, setList] = useState(null);
+  const { id } = useParams<{ id: string }>();
+  const [list, setList] = useState<ShoppingList | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState("");
   const router = useRouter();

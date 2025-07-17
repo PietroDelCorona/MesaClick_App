@@ -1,25 +1,24 @@
 "use client";
 
 import toast from "react-hot-toast";
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRecipe } from '@/services/recipeService';
-import { RecipeBase, RecipeIngredient, RecipeStep } from '@/types/recipe';
+import { RecipeCreate, RecipeIngredient, RecipeStep } from '@/types/recipe';
 import useUser from '@/hooks/useUser'; 
 
 export const useRecipeForm = () => {
   const { user } = useUser();
   const router = useRouter();
 
-  const [formData, setFormData] = useState<Omit<RecipeBase, 'ingredients' | 'steps'>>({
+  const [formData, setFormData] = useState<Omit<RecipeCreate, 'ingredients' | 'steps'>>({
     title: '',
     description: '',
     prep_time_minutes: 0,
     cook_time_minutes: 0,
     servings: 0,
     category: '',
-    image_url: null
+    image_url: '' // Corrigido de null para string
   });
 
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([{
@@ -93,7 +92,7 @@ export const useRecipeForm = () => {
     const toastId = toast.loading("Criando receita...");
     
     try {
-      const recipeData: RecipeBase = {
+      const recipeData: RecipeCreate = {
         ...formData,
         ingredients: ingredients
           .filter(ing => ing.name.trim() !== "")
@@ -108,7 +107,7 @@ export const useRecipeForm = () => {
             step_number: i + 1,
             instruction: step.instruction.trim()
           })),
-        image_url: null
+        image_url: formData.image_url || undefined // ajuste opcional
       };
 
       await createRecipe(token, recipeData);

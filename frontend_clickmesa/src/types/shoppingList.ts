@@ -1,6 +1,6 @@
 
 export interface ShoppingListItem {
-    id:number;
+    id:string;
     name: string;
     quantity: number;
     unit: string;
@@ -10,10 +10,17 @@ export interface ShoppingListItem {
 }
 
 export interface ShoppingList {
-    id: number;
+    id: string;
     name: string;
     created_at: string;
     owner_id: number;
     items: ShoppingListItem[];  
     
+}
+
+export interface NewShoppingListItem {
+    name: string;
+    quantity: number;
+    unit: string;
+    purchased: boolean;
 }

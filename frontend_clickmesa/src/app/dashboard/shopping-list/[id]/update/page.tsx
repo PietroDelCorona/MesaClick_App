@@ -12,11 +12,12 @@ import { FaCheck, FaTrash } from "react-icons/fa";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import ProtectedPage from '@/components/ProtectedPage';
 import { getShoppingListById, updateShoppingListWithItems } from '@/services/shoppingListService';
+import { ShoppingList } from '@/types/shoppingList';
 
 export default function UpdateShoppingListPage() {
   const router = useRouter();
-  const { id } = useParams();
-  const [list, setList] = useState(null);
+  const { id } = useParams<{ id: string }>();
+  const [list, setList] = useState<ShoppingList | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState("");
 
@@ -42,7 +43,8 @@ export default function UpdateShoppingListPage() {
     fetchList();
   }, [id, token]);
 
-  const togglePurchased = (index) => {
+  const togglePurchased = (index: number) => {
+    if (!list) return;
     const newItems = list.items.map((item, i) => 
         i === index ? { ...item, purchased: !item.purchased } : item
     );
@@ -51,8 +53,9 @@ export default function UpdateShoppingListPage() {
 
   const handleUpdateShoppingList = async () => {
     try {
+      if (!list) return;
       console.log("Payload enviado para o update:", list.items);        
-      await updateShoppingListWithItems(token, id, list.name, list.items);
+      await updateShoppingListWithItems(token, id, list.items);
       console.log("Atualizando lista:", {
         items: list.items
       });
@@ -60,6 +63,7 @@ export default function UpdateShoppingListPage() {
       toast.success(`"${list.name}" atualizada com sucesso!`);
       router.push(`/dashboard/shopping-list/${id}`);
     } catch (err) {
+      if (!list) return;
       console.error(err);
       toast.error(`Não foi possível atualizar "${list.name}"`);
     }

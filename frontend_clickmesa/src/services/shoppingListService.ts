@@ -1,5 +1,5 @@
 
-import { ShoppingList, ShoppingListItem } from "@/types/shoppingList";
+import { NewShoppingListItem, ShoppingList, ShoppingListItem } from "@/types/shoppingList";
 import { apiFetch } from "./api";
 
 
@@ -36,7 +36,7 @@ export async function getShoppingListById(token: string, id:string) {
 
 export async function createShoppingListWithItems(
     token: string,
-    items: ShoppingListItem[]
+    items: NewShoppingListItem[]
 ) {
     const response = await apiFetch("http://localhost:8000/shopping-lists/with-items", {
         method: "POST",

@@ -14,6 +14,7 @@ import { getMyRecipes, getRecipes } from '@/services/recipeService';
 import { Recipe } from '@/types/recipe';
 import toast from 'react-hot-toast';
 
+
 const locales = {
   'pt-BR': ptBR,
 };
@@ -180,7 +181,11 @@ export default function SchedulePage() {
                   scrollToTime={new Date(0, 0, 0, now.getHours(), now.getMinutes(), 0)}
                   view={calendarView}
                   date={currentDate}
-                  onView={(view) => setCalendarView(view)}
+                  onView={(view) => {
+                    if (view === "month" || view === "week" || view === "day" || view === "agenda") {
+                      setCalendarView(view);
+                    }
+                  }}
                   onNavigate={(date) => setCurrentDate(date)}
                   views={['month', 'week', 'day', 'agenda']}
                   selectable
@@ -199,15 +204,7 @@ export default function SchedulePage() {
                     event: 'Receita',
                     noEventsInRange: 'Não há receitas agendadas nesse período',
                   }}
-                  eventPropGetter={(event: RecipeEvent) => ({
-                    style: {
-                      backgroundColor: '#f97316',
-                      borderColor: '#ea580c',
-                      borderRadius: '4px',
-                      color: 'white',
-                      cursor: 'pointer',
-                    },
-                  })}
+                  
                 />
               </div>
 

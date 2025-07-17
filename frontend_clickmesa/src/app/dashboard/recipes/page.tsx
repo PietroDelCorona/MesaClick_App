@@ -154,7 +154,6 @@ export default function Page() {
                           onClick={() => {addItem({ 
                             id: recipe.id.toString(), 
                             title: recipe.title,
-                            quantity: 1 
                           });
                           toast.success(`Receita de "${recipe.title}" adicionada ao carrinho!`);
                           }}

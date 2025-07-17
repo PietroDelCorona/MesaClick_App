@@ -157,7 +157,6 @@ export default function Page() {
                             addItem({
                               id: recipe.id.toString(),
                               title: recipe.title,
-                              quantity: 1,
                             })
                           }
                           className="bg-white hover:bg-gray-100 text-orange-500 border border-orange-500 px-4 py-2 rounded-md transition-colors text-sm w-full cursor-pointer"

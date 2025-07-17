@@ -13,7 +13,7 @@ export function groupIngredients(items: ShoppingListItem[]): ShoppingListItem[] 
             existing.quantity += item.quantity;
         } else {
             // id e purchased não são tão relevantes no agrupamento, vamos padronizar
-            groupedMap.set(key, {...item, id: 0, purchased: false});
+            groupedMap.set(key, {...item, id: "", purchased: false});
         }
     }
 

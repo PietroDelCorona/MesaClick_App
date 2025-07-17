@@ -14,7 +14,7 @@ interface ScheduleFormProps {
     }) => Promise<void>;
 }
 
-export default function ScheduleForm( { selectedDate, recipes, onSubmit }: ScheduleFormProps) {
+export default function ScheduleForm( { recipes, onSubmit }: ScheduleFormProps) {
     const [form, setForm] = useState({
         meal_type: 'main dish',
         portions: 1,

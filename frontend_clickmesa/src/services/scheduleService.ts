@@ -1,7 +1,7 @@
-import { ScheduleCreate } from "@/types/schedule";
+import { ScheduleCreate, ScheduledMeal } from "@/types/schedule";
 import { apiFetch } from "./api";
 
-export async function getSchedules(token: string) {
+export async function getSchedules(token: string): Promise<ScheduledMeal[]> {
     const res = await apiFetch("http://localhost:8000/schedules", {
         headers: {
             Authorization: `Bearer ${token}`,

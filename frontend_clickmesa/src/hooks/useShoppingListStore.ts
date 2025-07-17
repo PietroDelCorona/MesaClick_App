@@ -19,7 +19,7 @@ type ShoppingListStore = {
   removeIngredient: (recipeId: string, idx: number) => void;
   completeList: () => void;
   clearList: () => void;
-  setFromCart: (cartItems: any[]) => void; // ou tipar melhor depois
+  setFromCart: (data: ShoppingListRecipe[]) => void;
 };
 
 export const useShoppingListStore = create<ShoppingListStore>((set) => ({
@@ -63,18 +63,5 @@ export const useShoppingListStore = create<ShoppingListStore>((set) => ({
 
   clearList: () => set(() => ({ shoppingList: [] })),
 
-  setFromCart: (recipes) => 
-    set(() => ({
-        shoppingList: recipes.map((recipe) => ({
-            id: recipe.id,
-            title: recipe.title,
-            ingredients: recipe.ingredients.map((ing) => ({
-                name: ing.name,
-                quantity: ing.quantity.toString(),
-                unit: ing.unit,
-                purchased: false,
-            })),
-        })),
-    })),
-
+  setFromCart: (data) => set(() => ({ shoppingList: data })),
 }));

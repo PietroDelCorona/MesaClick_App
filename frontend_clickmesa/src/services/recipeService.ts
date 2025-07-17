@@ -1,5 +1,5 @@
 
-import { Recipe } from "@/types/recipe";
+import { Recipe, RecipeCreate } from "@/types/recipe";
 import { apiFetch } from "./api";
 
 export async function getRecipes(token: string): Promise<Recipe[]> {

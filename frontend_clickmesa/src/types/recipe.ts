@@ -27,3 +27,15 @@ export interface Recipe extends RecipeBase {
   updated_at?: string;
   owner_id: number;
 }
+
+export interface RecipeCreate {
+  title: string;
+  description: string;
+  prep_time_minutes: number;
+  cook_time_minutes: number;
+  servings: number;
+  category: string;
+  image_url?: string;
+  ingredients: RecipeIngredient[];
+  steps: RecipeStep[];
+}
