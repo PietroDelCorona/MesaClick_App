@@ -5,7 +5,8 @@ import InsiderHeader from "../../components/InsiderHeader";
 import Sidebar from "../../components/Sidebar";
 import ProtectedPage from "@/components/ProtectedPage";
 import useUser from "@/hooks/useUser";
-import { getSchedules } from "@/services/scheduleService";
+/*import { getSchedules } from "@/services/scheduleService";*/
+import { getMySchedules } from '@/services/scheduleService';
 import { isToday, isTomorrow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getRecipeById } from '@/services/recipeListService';
@@ -39,7 +40,7 @@ export default function Page() {
       try {
         setIsLoading(true);
         const myRecipes = await getMyRecipes(token);
-        const schedules = await getSchedules(token);
+        const schedules = await getMySchedules(token);
         const shoppingLists = await getMyShoppingLists(token);
                 
         // Filtra refeições dos próximos 7 dias

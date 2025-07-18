@@ -17,6 +17,7 @@ from backend_clickmesa.schemas.schedule import (
     ScheduleUpdate,
 )
 
+from backend_clickmesa.security import get_current_user
 router = APIRouter(
     prefix="/schedules",
     tags=["schedules"]
@@ -45,6 +46,22 @@ async def read_schedules(
 
     return [SchedulePublic.model_validate(s, from_attributes=True) for s in schedules]
 
+
+@router.get('/me', response_model=list[SchedulePublic])
+async def get_my_schedules(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: User = Depends(get_current_user),
+):
+    print(f"Buscando datas do usuário: {current_user.id}")
+    
+    result = await session.execute(
+        select(Schedules)
+        .where(Schedules.user_id == current_user.id)
+        .options(selectinload(Schedules.recipe))  # Se quiser carregar a receita junto
+    )
+    
+    schedules = result.scalars().all()
+    return [SchedulePublic.model_validate(s, from_attributes=True) for s in schedules]
 
 @router.get('/{schedule_id}', response_model=SchedulePublic)
 async def read_schedule_by_id(

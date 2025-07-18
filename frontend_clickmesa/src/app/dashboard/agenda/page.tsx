@@ -9,7 +9,7 @@ import { FaPlus } from 'react-icons/fa';
 import InsiderHeader from "@/components/InsiderHeader";
 import Sidebar from "@/components/Sidebar";
 import ProtectedPage from '@/components/ProtectedPage';
-import { getSchedules, createSchedule } from '@/services/scheduleService';
+import { getMySchedules, createSchedule } from '@/services/scheduleService';
 import { getMyRecipes, getRecipes } from '@/services/recipeService';
 import { Recipe } from '@/types/recipe';
 import toast from 'react-hot-toast';
@@ -64,7 +64,7 @@ export default function SchedulePage() {
 
       try {
         const [schedules, systemRecipesData, myRecipesData] = await Promise.all([
-          getSchedules(token),
+          getMySchedules(token),
           getRecipes(token),
           getMyRecipes(token),
         ]);
